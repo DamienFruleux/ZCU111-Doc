@@ -2,21 +2,15 @@
 
 There are different ways to proceed for the "data management". 
 
-The easiest way is certainly to use a pynq notebook and the [dma](https://pynq.readthedocs.io/en/v2.6.1/pynq_libraries/dma.html) class of the Pynq library, but this has some limitations.
+The easiest way is certainly to use a pynq notebook and the [dma class of the Pynq library](https://pynq.readthedocs.io/en/v2.6.1/pynq_libraries/dma.html), but this has some limitations.
 
-That's why I developed a C code that does almost the same thing, but in a lower level, using the standard POSIX libraries ([example](https://lauri.xn--vsandi-pxa.com/hdl/zynq/xilinx-dma.html)). Finally, it is possible to do the same thing as in C but in Python (it may be easier for some people).
+That's why I developed a C code that does almost the same thing, but in a lower level, using the standard POSIX libraries ([example 1](https://lauri.xn--vsandi-pxa.com/hdl/zynq/xilinx-dma.html) and [example 2](https://www.hackster.io/whitney-knitter/introduction-to-using-axi-dma-in-embedded-linux-5264ec)). Finally, it is possible to do the same thing as in C but in Python (it may be easier for some people).
 
 As there are 2 types of memories (PS and PL) that can be used in each case, I will detail the different possibilities. Be careful though, not all possibilities are possible, especially with Pynq.
 
-
 # General operation of the Vivado design
 
-todo
-
-pdf : capture
-
-explications : PS -> DMA -> RF
-
+todo : PS->DMA->DAC & ADC->DMA->PS
 
 # Use Pynq libraries
 
@@ -24,11 +18,7 @@ As I explained, the pynq_notebook uses the Pynq libraries. Although it works per
 
 ## Program Operation
 
-todo
-
-notebook : capture
-
-explications : overlay -> allocate -> dma.send
+The explanations of [dma class of the Pynq library](https://pynq.readthedocs.io/en/v2.6.1/pynq_libraries/dma.html) are very well explained and illustrate very well the different steps required.
 
 ## Limits with PSRAM
 
@@ -99,7 +89,7 @@ To use DMA component minimally four steps have to be taken:
 
 In this case we are copying 32 bytes from physical address of 0x0E000000 to physical addres of 0x0F000000. 
 Note that kernel may allocate memory for other processes in that range and that is the primary reason to write a kernel module which would request_mem_region so no other processes would overlap with the memory range.
-Besides reserving memory ranges the kernel module provides a sanitized way of accessing the hardware from userspace applications via /dev/blah block devices."
+Besides reserving memory ranges the kernel module provides a sanitized way of accessing the hardware from userspace applications via /dev/blah block devices.
 ```
 
 I would like to add that if you want to make a [continuous transfers](https://github.com/DamienFruleux/ZCU111-Doc/blob/main/1-AXI_DMA.md#use-a-fifo), in order to get rid of the [DMA limit of 67 108 863 bytes](https://github.com/DamienFruleux/ZCU111-Doc/blob/main/1-AXI_DMA.md#maximum-size-of-a-transfert), you must repeat the 4 steps in a loop.

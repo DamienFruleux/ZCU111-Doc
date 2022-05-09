@@ -12,14 +12,13 @@ In particular, the DMA has 2 separate channels:
 
 - Write Channel : read data from the device and **write it directly to the RAM**.
 
-TODO
-datasheet
+Finally, the [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) Xilinx IP allows you to transfer data between the Processing System (ARM processors) and the Programable Logical (FPGA). More explanations on the use with the PS and details on the use of DAC/ADC will be given next.
 
 # AXI4 Protocol
 
 The [Advanced eXtensible Interface 4](https://en.wikipedia.org/wiki/Advanced_eXtensible_Interface) (AXI4) is a parallel communication interface, mainly designed for on-chip communication.
 
-There are three types of AXI4 interfaces [UG761, page 4](https://www.xilinx.com/support/documentation/ip_documentation/axi_ref_guide/latest/ug761_axi_reference_guide.pdf) :
+There are three types of AXI4 interfaces [UG761, page 4](https://docs.xilinx.com/v/u/en-US/ug761_axi_reference_guide) :
 
 - **AXI4** : for Memory Mapped (MM) interfaces. **It allows burst of up to 256 data transfer cycles with just a single address phase**. Useful for high-performance requirements. 
 
@@ -31,13 +30,16 @@ In practice, for the AXI4 (MM) and AXI4-Lite interfaces, it is necessary to read
 
 # Technical Characteristics of DMA
 
+![DMA](./images/DMA.png?raw=true "AXI DMA Controller Xilinx IP")
+
 ## Maximum size of a transfert
 
 The maximum width of buffer length register is **2<sup>26</sup>-1 bytes**. This means that a DMA transfert cannot contain more than **64 MB - 1 (or 64 Mo - 1)** of data (this is a hardware limit of the Xilinx IP).
 
 > More precisely : 2<sup>26</sup> bits = 67 108 864 b = 64 Mb = 8 MB (or 8 Mo)
-TODO
-typo in vivado (give datasheet)
+
+Be careful, vivado is not very clear in the configuration, because it requires a number of bits  :  We can read in [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma/Width-of-Buffer-Length-Register) : 
+*The number of bytes is equal to 2 Length Width . So a Length Width of 26 gives a byte count of 67,108,863 bytes.* 
 
 ## Maximum speed of a transfert
 
@@ -71,17 +73,15 @@ The maximum transfer rate on the AXI4 (MM) side is also **9.375 GSa/s**.
 
 ### AXI4-Stream side
 
-On the AXI4-Stream side, the speed is limited by the Intellectual Property (IP) that you use : generally, it is not possible to choose the parameters, except if you develop your own IP. 
+According to [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma), AXI4-Stream data width support of 8, 16, 32, 64, 128, 256, 512 and 1024 bits. Tt is the number of bits that will be sent or received by the DMA in 1 clock stroke, but it does not correspond to the total amount of data transferred by the DMA, which is 64 MB - 1 ( or 64 Mo - 1), as seen before.
 
-TODO
-
+On the AXI4-Stream side, the speed is limited by the Intellectual Property (IP) that you use : generally, it is not possible to choose the parameters, except if you develop your own IP. This is what we will do next. In our example, we will use data width of 128 or 256 bits depending on the case (ADCs or DACs)
 
 ## Maximum amount of RAM
 
-It is possible to [upgrade](TODO) the ZCU111 SODIMM RAM, in order to have up to **32 GB (or 32 Go) of memory in the PS**, which corresponds to **16 GSa of samples in the PS**. 
+According to [DS889, page 12](https://docs.xilinx.com/v/u/en-US/ds889-zynq-usp-rfsoc-overview) it is possible to upgrade the ZCU111 SODIMM RAM, in order to have up to **32 GB (or 32 Go) of memory in the PS**, which corresponds to **16 GSa of samples in the PS**. 
 
 But unfortunately, it is not possible to increase the DDR4 SDRAM, because this memory is soldered, there is only **4 GB (or 4 Go) of memory in the PL**, which corresponds to **2 GSa of samples in the PL**. 
-
 
 It is necessary to choose between speed and amount of memory : 
 
@@ -90,26 +90,45 @@ It is necessary to choose between speed and amount of memory :
 
 # Use a FIFO
 
-TODO
+## Definition and utility of a FIFO
 
-Nevertheless, it is possible to make a continuous transfer, with a AXI4-Stream FIFO and a C program, by cleverly using the different registers.
+We have seen previously that AXI4-Stream data width support up to 1024 bits, which means that at each clock stroke we will send that many bits. 
 
-In order to realize continuous data transfers, necessary to use DACs and ADCs later, we must make sure that the amount of upstream data is always at least superior to the amount of downstream data : that's why we will add a buffer (a FIFO), which will be clocked by 2 independent clocks, one for the input data and one for the output data. As the clocks are not the same, it is necessary to have a buffer to store the excess data.
-
-## Definition of FIFO
+Unless you want to send only this small number of bits in total (which would be quite surprising), you will have to use a buffer (a memory) to temporarily store the different bits.
 
 A [FIFO](https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)) (first in, first out : the first in is the first out) is a method for organising the manipulation of a data buffer, where the oldest (first) entry, is processed first. 
 
-TODO
-datasheet
+Finally, the [AXI Streaming FIFO](https://www.xilinx.com/products/intellectual-property/axi_fifo.html) Xilinx IP which will be useful to store data.
 
-## FIFO Size
+## Technical Characteristics of FIFO
 
-A FIFO has a maximum memory depth of 32 768 (this is a hardware limit of the Xilinx IP). 
+![FIFO](./images/FIFO.png?raw=true "AXI Streaming FIFO Xilinx IP")
 
-For an 128 bits AXI4-Stream data width, this corresponds to **512 KB (or 512 Ko)**.
+### FIFO Size
+
+According to [PG080](https://docs.xilinx.com/v/u/en-US/pg080-axi-fifo-mm-s) FIFO has a maximum memory depth of 32 768 (this is a hardware limit of the Xilinx IP). 
+
+- For an 128 bits AXI4-Stream data width, this corresponds to **512 KB (or 512 Ko)**.
 
 > More precisely : 32 768 * 128 bits = 4 194 304 bits = 4 Mb = **512 KB (or 512 Ko)**
-## Dual Clock
-TODO
-As we will see later, the clocks of the AXI4 interface of the upstream part (PS+DMA) and downstream (RF) are not identical. In addition to being used as a buffer, the FIFO will also make it possible to "synchronize" the data between 2 AXI4 interfaces with different clocks
+
+- For an 256 bits AXI4-Stream data width, this corresponds to **1 MB (or 1 Mo)**.
+
+> More precisely : 32 768 * 256 bits = 8 388 608 bits = 8 Mb = **1 MB (or 1 Mo)**
+
+### Independent Clock
+
+TODO : finish
+
+The clocks of the AXI4 interface of the upstream part (PS+DMA) and downstream (RF) are not identical. In addition to being used as a buffer, the FIFO will also make it possible to "synchronize" the data between 2 AXI4 interfaces with different clocks
+
+### Continuous Transfer
+
+TODO : finish + image
+
+It is possible to make a continuous transfer, with a AXI4-Stream FIFO and a C program, by cleverly using the different registers.
+
+In order to realize continuous data transfers, necessary to use DACs and ADCs later, we must make sure that the amount of upstream data is always at least superior to the amount of downstream data : that's why we will add a buffer (a FIFO), which will be clocked by 2 independent clocks, one for the input data and one for the output data. As the clocks are not the same, it is necessary to have a buffer to store the excess data.
+
+
+
