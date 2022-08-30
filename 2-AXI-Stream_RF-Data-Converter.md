@@ -122,7 +122,7 @@ For 2 perfectly synchronized DACs, the 2 signals (or channels) must be sent alte
 
 If we keep the same sampling frequency of the **total** signal and the same number of **total** samples, this obviously leads to a division by 2 of the sampling frequency **per channel**, and a division by 2 of the number of samples **per channel**.
 
-> For example, instead of having in the PS 1 signal composed of 16 GSa and sampled at 2.048 GSa/s, we will have 2 signals composed **in total** of 16 GSa and sampled **in total** at 2.048 GSa/s, which gives 8 GSa **per channel** and 2.048 GSa/s **per channel**.
+> For example, instead of having in the PS 1 signal composed of 14 GSa and sampled at 2.048 GSa/s, we will have 2 signals composed **in total** of 14 GSa and sampled **in total** at 2.048 GSa/s, which gives 7 GSa **per channel** and 1.024 GSa/s **per channel**.
 
 In the code, it is necessary to send to the DMA a buffer which contains the samples of channel A on the even data and the samples of channel B on the odd data.
 
