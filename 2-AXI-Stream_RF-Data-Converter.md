@@ -145,7 +145,7 @@ However, the AXI Stream bus requires data on 16 bits (like the code afterwards w
 It is therefore possible to save respectively 12.5 and 25% of the flow necessary to send the same information. 
 In the case of DACs, this is relatively low, but in the case of ADCs, the compression is very important!
 
-Although this is not necessary in the examples presented for the moment, it will be useful if we wish to use the 4 SFP28 connectors later on. Indeed, with a data rate of 4*25Gbps = 100 Gbps, i.e. 12.5 GB/s (or 12.5 GB/s), it is not possible to send 4 data streams from the ADCs at 2 GSa/s each, because this requires a cumulative data rate of 4*2GSa/s = 8GSa/s = 16 GB/s (= 16 GB/s). With a 25% compression (12 bits instead of 16), we get a throughput of 12 GB/s (= 12 GB/s), which is well compatible with the throughput of the 4 SFP28 ports.
+Although this is not necessary in the examples presented for the moment, it will be useful if we wish to use the 4 SFP28 connectors later on. Indeed, with a data rate of 4 * 25Gbps = 100 Gbps, i.e. 12.5 GB/s (or 12.5 Go/s), it is not possible to send 4 data streams from the ADCs at 2 GSa/s each, because this requires a cumulative data rate of 4*2GSa/s = 8GSa/s = 16 GB/s (= 16 Go/s). With a 25% compression (12 bits instead of 16), we get a throughput of 12 GB/s (= 12 Go/s), which is well compatible with the throughput of the 4 SFP28 ports.
 
 To do this, we need to perform an IP in Vivado that removes the 4 MSB bits from the RF signals of the ADCs and aggregates 4 * 12 bits into 3 * 16 bits before sending the data to the DMA. 
 
