@@ -79,7 +79,7 @@ The maximum transfer rate on the AXI4 (MM) side is also **9.375 GSa/s**.
 
 According to [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma), AXI4-Stream data width support of 8, 16, 32, 64, 128, 256, 512 and 1024 bits. Tt is the number of bits that will be sent or received by the DMA in 1 clock stroke, but it does not correspond to the total amount of data transferred by the DMA, which is 64 MB - 1 ( or 64 Mo - 1), as seen before.
 
-On the AXI4-Stream side, the speed is limited by the Intellectual Property (IP) that you use : generally, it is not possible to choose the parameters, except if you develop your own IP. This is what we will do next. In our example, we will use data width of 128 or 256 bits depending on the case (ADCs or DACs)
+On the AXI4-Stream side, the speed is limited by the Intellectual Property (IP) that you use : generally, it is not possible to choose the parameters, except if you develop your own IP. This is what we will do next. In our example, we will use data width of 128, 256, 512 or 1024 bits depending on the case (ADCs or DACs) and the number of channels.
 
 ## Maximum amount of RAM
 
@@ -122,6 +122,14 @@ According to [PG085](https://docs.xilinx.com/r/en-US/pg085-axi4stream-infrastruc
 - For an 256 bits AXI4-Stream data width, this corresponds to **1 MB (or 1 Mo)**.
 
 > More precisely : 32 768 * 256 bits = 8 388 608 bits = 8 Mb = **1 MB (or 1 Mo)**
+
+- For an 512 bits AXI4-Stream data width, this corresponds to **2 MB (or 1 Mo)**.
+
+> More precisely : 32 768 * 512 bits = 16 777 216 bits = 16 Mb = **2 MB (or 1 Mo)**.
+
+- For an 256 bits AXI4-Stream data width, this corresponds to **4 MB (or 4 Mo)**.
+
+> More precisely : 32 768 * 1024 bits = 33 554 432 bits = 32 Mb = **4 MB (or 4 Mo)**
 
 ### Independent Clock
 
