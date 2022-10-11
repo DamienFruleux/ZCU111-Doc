@@ -123,9 +123,9 @@ According to [PG085](https://docs.xilinx.com/r/en-US/pg085-axi4stream-infrastruc
 
 > More precisely : 32 768 * 256 bits = 8 388 608 bits = 8 Mb = **1 MB (or 1 Mo)**
 
-- For an 512 bits AXI4-Stream data width, this corresponds to **2 MB (or 1 Mo)**.
+- For an 512 bits AXI4-Stream data width, this corresponds to **2 MB (or 2 Mo)**.
 
-> More precisely : 32 768 * 512 bits = 16 777 216 bits = 16 Mb = **2 MB (or 1 Mo)**.
+> More precisely : 32 768 * 512 bits = 16 777 216 bits = 16 Mb = **2 MB (or 2 Mo)**.
 
 - For an 256 bits AXI4-Stream data width, this corresponds to **4 MB (or 4 Mo)**.
 
