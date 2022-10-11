@@ -113,7 +113,7 @@ The [AXI Streaming FIFO](https://www.xilinx.com/products/intellectual-property/a
 
 ### FIFO Size
 
-According to [PG085](https://www.xilinx.com/support/documents/ip_documentation/axis_infrastructure_ip_suite/v1_0/pg085-axi4stream-infrastructure.pdf) FIFO has a maximum memory depth of 32 768 (this is a hardware limit of the Xilinx IP). 
+According to [PG085](https://docs.xilinx.com/r/en-US/pg085-axi4stream-infrastructure) FIFO has a maximum memory depth of 32 768 (this is a hardware limit of the Xilinx IP). 
 
 - For an 128 bits AXI4-Stream data width, this corresponds to **512 KB (or 512 Ko)**.
 
