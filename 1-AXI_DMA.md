@@ -133,4 +133,13 @@ According to [PG085](https://docs.xilinx.com/r/en-US/pg085-axi4stream-infrastruc
 
 ### Independent Clock
 
-Be sure to choose this option to be able to read and write in the FIFO with 2 different frequencies
+Be sure to choose this option to be able to read and write in the FIFO with 2 different frequencies.
+
+
+### Continuous transfert
+
+Thanks to this FIFO, which acts as a buffer, we also have the possibility of making continuous transfers. 
+
+In fact, if the memory depth is sufficient, it is possible to launch a DMA transfer and before all the data is transferred to the AXI4-Stream side, it is possible to restart a DMA transfer and so on. 
+
+In this way, the data is transferred continuously over time, without any "gaps" in the signal. 
