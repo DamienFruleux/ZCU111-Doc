@@ -143,3 +143,5 @@ Thanks to this FIFO, which acts as a buffer, we also have the possibility of mak
 In fact, if the memory depth is sufficient, it is possible to launch a DMA transfer and before all the data is transferred to the AXI4-Stream side, it is possible to restart a DMA transfer and so on. 
 
 In this way, the data is transferred continuously over time, without any "gaps" in the signal. 
+
+It is therefore possible to artificially increase the size of a DMA transfer to exceed the limit of 67 108 863 bytes (or 64MB - 1).
