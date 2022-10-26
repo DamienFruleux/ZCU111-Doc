@@ -2,15 +2,32 @@
 
 There are different ways to proceed for the "data management". 
 
-The easiest way is certainly to use a pynq notebook and the [dma class of the Pynq library](https://pynq.readthedocs.io/en/v2.6.1/pynq_libraries/dma.html), but this has some limitations.
+The easiest way is certainly to use a pynq notebook and the [dma class of the Pynq library](https://pynq.readthedocs.io/en/latest/pynq_libraries/dma.html), but this has some limitations.
 
-That's why I developed a C code that does almost the same thing, but in a lower level, using the standard POSIX libraries ([example 1](https://lauri.xn--vsandi-pxa.com/hdl/zynq/xilinx-dma.html) and [example 2](https://www.hackster.io/whitney-knitter/introduction-to-using-axi-dma-in-embedded-linux-5264ec)). Finally, it is possible to do the same thing as in C but in Python (it may be easier for some people).
+That's why I developed a C code that does almost the same thing, but in a lower level, using the standard POSIX libraries ([example 1](https://lauri.xn--vsandi-pxa.com/hdl/zynq/xilinx-dma.html) and [example 2](https://www.hackster.io/whitney-knitter/introduction-to-using-axi-dma-in-embedded-linux-5264ec)). This also allows for continuous transfer of the entire available memory.
+
+Finally, it is possible to do the same thing as in C but in Python (it may be easier for some people).
+
+If necessary, it is possible to configure and obtain a certain number of parameters in the different IPs, for example the frequency of the PLLs for the DACs, the state of the DMAs... This configuration can be done easily with the Pynq libraries because most of the functions are implemented, which is not necessarily the case in the proposed C program, which only contains the elements necessary for proper operation.
+
+For reasons of simplicity, we preferred to continue to load the overlay using the "Overlay" function of the Pynq library, even with the C language codes. We are currently working on a better understanding of these principles in order to do without the Pynq library in the future. 
 
 As there are 2 types of memories (PS and PL) that can be used in each case, I will detail the different possibilities. Be careful though, not all possibilities are possible, especially with Pynq.
 
 # General operation of the Vivado design
 
-todo : PS->DMA->DAC & ADC->DMA->PS
+The operating principle is relatively simple and remains the same in the different cases.
+
+For the DACs, the steps are as follows: 
+- 1: we load the bitstream (the desing of the circuit)
+- 2: we place in memory the samples we want to send
+- 3: we launch a DMA transfer to send the data in memory to the DACs
+
+For the ADCs, the steps are as follows: 
+- 1: we load the bitstream (the desing of the circuit)
+- 2: we launch a DMA transfer in order to receive the data in memory from the ADCs
+- 3: we recover the samples received from the memory
+
 
 # Use Pynq libraries
 
@@ -18,17 +35,51 @@ As I explained, the pynq_notebook uses the Pynq libraries. Although it works per
 
 ## Program Operation
 
-The explanations of [dma class of the Pynq library](https://pynq.readthedocs.io/en/v2.6.1/pynq_libraries/dma.html) are very well explained and illustrate very well the different steps required.
+The explanations of [dma class of the Pynq library](https://pynq.readthedocs.io/en/latest/pynq_libraries/dma.html) are very well explained and illustrate very well the different steps required.
+
+We use the functions available in the Pynq libraries to carry out the transfer. The code can be summarized in the following steps: 
+
+- 1: load the bitstream in the memory (*Overlay* function)
+- 2: reserve the necessary amount of memory (*allocate* function, itself based on the **cma library which allows a dynamic allocation**)
+- 3: fill the reserved memory with the samples to be converted (for example: 1 sine and 1 cosine)
+- 4: launch the DMA transfer (*sendchannel.transfer* and *sendchannel.wait* functions)
+
+We can present the associated piece of code:
+
+```
+import numpy as np
+from pynq import allocate
+from pynq import Overlay
+
+ol = Overlay('example.bit')
+dma = ol.axi_dma
+
+input_buffer = allocate(shape=(5,), dtype=np.uint16)
+output_buffer = allocate(shape=(5,), dtype=np.uint16)
+
+for i in range(5):
+   input_buffer[i] = i
+
+dma.sendchannel.transfer(input_buffer)
+dma.sendchannel.wait()
+
+```
+
+It works perfectly. However, there are a number of limitations.
 
 ## Limits with PSRAM
 
-### 1- Dynamic memory allocation
+### 1- Continuous transfert
 
-Pynq uses dynamic memory allocation (malloc function in C), which means that it asks the kernel to allocate a certain amount of memory. So there are limits on the amount of memory allocated, since the OS must keep a certain amount of memory: it is not possible to allocate all 4GB of RAM to store data !
+Note that if it is possible to make continuous transfers in C (explained below), Pynq does not yet offer this method directly (to my knowledge).
+
+I have previously how to perform [continuous transfers](https://github.com/DamienFruleux/ZCU111-Doc/blob/main/1-AXI_DMA.md#continuous-transfert), in order to get rid of the [DMA limit of 67 108 863 bytes (or 64MB - 1)](https://github.com/DamienFruleux/ZCU111-Doc/blob/main/1-AXI_DMA.md#maximum-size-of-a-transfert). However, due to the very high level operation of the pynq functions, it is almost certain that the time between the end of the execution of the 1st function *dma.sendchannel.transfer(input_buffer_a)* and the time between the beginning of the 2nd function *dma.sendchannel.transfer(input_buffer_b)* will be probably too long to allow a continuous transfer. I haven't tested this theory yet, maybe I'll do it sometime. In this case, we would need a FIFO with a memory depth large enough to act as a buffer long enough.
+
+While it may work, it doesn't allow us to manage our transfers accurately enough. 
 
 ### 2- Buffer size
 
-By default, it is not possible to allocate more than 128MB of data using the "allocate" function provided by pynq : [This buffer is allocated inside the kernel space using xlnk driver. The maximum allocatable memory is defined at kernel build time using the CMA memory parameters. For Pynq-Z1 kernel, it is specified as 128MB] (https://pynq.readthedocs.io/en/v2.0/_modules/pynq/xlnk.html).
+By default, it is not possible to allocate more than 128MB of data using the *allocate* function provided by pynq : [This buffer is allocated inside the kernel space using xlnk driver. The maximum allocatable memory is defined at kernel build time using the CMA memory parameters. For Pynq-Z1 kernel, it is specified as 128MB] (https://pynq.readthedocs.io/en/v2.0/_modules/pynq/xlnk.html).
 
 This documentation is from version 2.0 of pynq, it is possible that the size has increased, especially for the ZCU111, but in any case, the principle remains the same: there is a significant size limit.
 
@@ -40,15 +91,16 @@ In order to extend this limitation, it is necessary to compile the Kernel by mod
 
 You will find more information [here](https://discuss.pynq.io/t/pynq-maximum-allocatable-memory-cma/1593), but I intend to add some documentation on this task later.
 
-### 3- Data arrangement in memory
+Although relatively simple, it requires additional work and does not necessarily correspond to our specifications.
+
+### 3- Dynamic memory allocation
+
+Pynq uses dynamic memory allocation (malloc function in C), which means that it asks the kernel to allocate a certain amount of memory. So there are limits on the amount of memory allocated, since the OS must keep a certain amount of memory: it is not possible to allocate all 4GB of RAM to store data ! Even though the amount of memory that can be used is considerably increased with the cma library.
+
+### 4- Data arrangement in memory
 
 Finally, even if it is possible to allocate the desired amount of memory after some manipulations, it is not certain that the data are arranged continuously in memory, especially if there are large amounts of data, which could potentially cause some problems since **the analog signal is continuous over time** : we could then see artifacts appear in the analog signal, like holes.
-
-### 4- Continuous transfert
-
-Note that if it is possible to make continuous transfers in Python as in C, Pynq does not yet offer this method directly (to my knowledge).
-
-I have previously how to perform [continuous transfers](https://github.com/DamienFruleux/ZCU111-Doc/blob/main/1-AXI_DMA.md#use-a-fifo), in order to get rid of the [DMA limit of 67 108 863 bytes](https://github.com/DamienFruleux/ZCU111-Doc/blob/main/1-AXI_DMA.md#maximum-size-of-a-transfert). However, due to the very high level operation of the pynq functions, it is almost certain that the time between the end of the execution of the 1st function *dma.sendchannel.transfer(input_buffer_a)* and the time between the beginning of the 2nd function *dma.sendchannel.transfer(input_buffer_b)* will be too long to allow a continuous transfer. I haven't tested this theory yet, maybe I'll do it sometime. 
+The DMA can use a mechanism called SG for this. It will be necessary to make sure that the FIFO memory depth is large enough to allow time for the DMA to "change memory area". However, this point is more of a question than a statement. 
 
 ## Limits with PLRAM
 
