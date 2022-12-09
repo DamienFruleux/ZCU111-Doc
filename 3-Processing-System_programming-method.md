@@ -4,11 +4,9 @@ There are different ways to proceed for the "data management".
 
 The easiest way is certainly to use a pynq notebook and the [dma class of the Pynq library](https://pynq.readthedocs.io/en/latest/pynq_libraries/dma.html), but this has some limitations.
 
-That's why I developed a C code that does almost the same thing, but in a lower level, using the standard POSIX libraries ([example 1](https://lauri.xn--vsandi-pxa.com/hdl/zynq/xilinx-dma.html) and [example 2](https://www.hackster.io/whitney-knitter/introduction-to-using-axi-dma-in-embedded-linux-5264ec)). This also allows for continuous transfer of the entire available memory.
+That's why I developed a C code that does almost the same thing, but in a lower level, using the standard POSIX libraries ([example 1](https://lauri.xn--vsandi-pxa.com/hdl/zynq/xilinx-dma.html) and [example 2](https://www.hackster.io/whitney-knitter/introduction-to-using-axi-dma-in-embedded-linux-5264ec)). This allows us to have more flexibility on the various actions to be carried out. Of course, it is possible to do the same thing in another programming language, like Python.
 
-Finally, it is possible to do the same thing as in C but in Python (it may be easier for some people).
-
-If necessary, it is possible to configure and obtain a certain number of parameters in the different IPs, for example the frequency of the PLLs for the DACs, the state of the DMAs... This configuration can be done easily with the Pynq libraries because most of the functions are implemented, which is not necessarily the case in the proposed C program, which only contains the elements necessary for proper operation.
+If necessary, it is possible to configure and obtain a certain number of parameters in the different IPs, for example the frequency of the PLLs for the DACs, the state of the DMAs... This configuration can be done easily with the Pynq libraries because most of the functions are implemented, which is not necessarily the case in the proposed C program, which only contains the elements necessary for proper operation. It is not impossible that I implement all this later. 
 
 For reasons of simplicity, we preferred to continue to load the overlay using the "Overlay" function of the Pynq library, even with the C language codes. We are currently working on a better understanding of these principles in order to do without the Pynq library in the future. 
 
@@ -115,11 +113,13 @@ Finally, although it seems possible, the documentation does not seem to consider
 If you have any information, don't hesitate to share it with me.
 
 
-# Use C/Python standard libraries
+As I explained, the pynq_notebook uses the Pynq libraries. Although it works perfectly, there are some limitations that can become annoying in some cases. 
+
+# Use C standard libraries
+
+In order to overcome these limitations, we propose not to use the Pynq library anymore, but to use lower level functions. In particular, I have chosen to use the C language to initiate DMA transfers by directly using the control registers available in [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma): we can perform continuous transfers of all available memory, and not be limited to a single DMA transfer.
 
 ## Program Operation
-
-In order to overcome these limitations, it is possible to use the standard POSIX libraries, in C or python language. 
 
 I resume the explanations of [Lauri Vosandi](https://lauri.võsandi.com/hdl/zynq/xilinx-dma.html), which are in my opinion perfect: 
 
@@ -146,9 +146,66 @@ Besides reserving memory ranges the kernel module provides a sanitized way of ac
 
 I would like to add that if you want to make a [continuous transfers](https://github.com/DamienFruleux/ZCU111-Doc/blob/main/1-AXI_DMA.md#use-a-fifo), in order to get rid of the [DMA limit of 67 108 863 bytes](https://github.com/DamienFruleux/ZCU111-Doc/blob/main/1-AXI_DMA.md#maximum-size-of-a-transfert), you must repeat the 4 steps in a loop.
 
+We use the functions available in the standard POSIX libraries to carry out the transfer. The code can be summarized in the following steps: 
+
+- 1: load the bitstream in the memory (as explained at the beginning, we continue to do this step with Pynq tools for the moment)
+- 2: fill the memory range with the samples to be converted (for example: 1 sine and 1 cosine)
+- 3: launch the DMA transfer (explained in the quote above)
+
+We can present the associated piece of code:
+
+```
+// File Descriptor : open /dev/mem which represents the whole physical memory
+int fd = open("/dev/mem", O_RDWR | O_SYNC);
+
+// Memory Map Source Address
+int16_t* mem = mmap(NULL, number_octet, PROT_READ | PROT_WRITE, MAP_SHARED, fd, MEMORY_ADDR);
+
+// Memory Map DMA (AXI Lite register block)
+int32_t* dma = mmap(NULL, REGISTER_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, DMA_ADDR);
+
+// Calculate & saving data in memory
+for (uint64_t i=0; i<number_samples;i+=2){
+	mem[i] = (int16_t)(pow(2,14)*sin(i/2*3.14/180));
+	mem[i+1] = (int16_t)(pow(2,14)*cos(i/2*3.14/180));
+}
+
+// Send data from memory to DMA
+
+// Reset DMA
+dma[MM2S_CONTROL_REGISTER] = 0x4;
+
+for(unsigned int n=0; n<number_packet; n++){
+	// Halt DMA
+	dma[MM2S_CONTROL_REGISTER] = 0x0;
+
+	// Write source addresses
+	dma[MM2S_START_ADDRESS_LSB] = MEMORY_ADDR_LSB+n*DMA_SIZE;
+	dma[MM2S_START_ADDRESS_MSB] = MEMORY_ADDR_MSB;
+
+	// Start DMA
+	dma[MM2S_CONTROL_REGISTER] = 0x1;
+
+	// Begin tranfer
+	dma[MM2S_LENGTH] = DMA_SIZE;
+
+	// Wait until done
+	while (((dma[MM2S_STATUS_REGISTER] >> 1) & 0x00000001)!= 1) {}
+}
+
+// Munmap & Close
+munmap((void *) dma, REGISTER_SIZE);
+munmap((void *) mem, number_octet);
+close(fd);
+
+```
+We notice that we don't use dynamic memory allocation in this part, but we directly read and write in memory areas. However, note that kernel may allocate memory for other processes in that range. It is therefore used with knowledge (see below for more information on this subject).
+
+It works perfectly. This time without limitations, but with more knowledge needed!
+
 ## Use PLRAM
 
-With the right memory addresses, It works perfectly and without any problems because it is not used by the Linux Kernel.
+With the right memory addresses, It works perfectly and without any problems because it is not used by the Linux Kernel. Please refer to [UG1085](https://docs.xilinx.com/r/en-US/ug1085-zynq-ultrascale-trm) for more information about memory address spaces. 
 
 ## Use PSRAM
 
@@ -189,15 +246,17 @@ Also, I haven't investigated this possibility yet
 
 ### Use more than 4 GB SODIMM RAM
 
-#### Linux always "see" 4GB of RAM
-
-Indeed, by default the ZCU111 has a 4GB SODIMM. If we use the method described above, we run the risk of using memory addresses potentially used by the Linux Kernel. As I needed a lot of memory and not to use dynamic allocation (data continuity), I upgraded the SODIMM up to the maximum possible (32GB) and I made sure that it is well mapped in /dev/memory, but without the Linux kernel being able to exploit it like classic RAM. More simply, linux still sees 4GB of RAM, but can access the other 28GB of the PS in the same way as the 4GB of the PL. 
-
-You can find more information on this subject [here] (in progress)
+As explained above, it is possible to change the SODIMM ZCU111 RAM strip, in order to have 32 GB (or 32 GB) of memory in the PS.
 
 #### Linux see all 32GB of RAM
 
-Note however that it is possible to use the 32GB of RAM with the Linux Kernel and to allocate the necessary amount of memory dynamically. I cannot however certify the continuity of the data in memory. (Note that with a kernel modulator and the kmalloc function this seems possible). 
+Note however that it is possible to use the 32GB of RAM with the Linux Kernel and to allocate the necessary amount of memory dynamically. I cannot however certify the continuity of the data in memory. (Note that with a kernel module and the kmalloc function this seems possible). 
+
+#### Linux always "see" 4GB of RAM
+
+Indeed, by default the ZCU111 has a 4GB SODIMM. If we use the method described above, we run the risk of using memory addresses potentially used by the Linux Kernel. As I needed a lot of memory and not to use dynamic allocation (data continuity), I upgraded the SODIMM up to the maximum possible (32GB) and I made sure that it is well mapped in /dev/memory, but without the Linux kernel being able to exploit it like classic RAM. More simply, linux still sees 4GB of RAM, but can access the other 28GB of the PS in the same way as the 4GB of the PL. As the samples are coded on 16 bits (=2 bytes or 2 octets), it is possible to store up to 14 GSa in this unallocated memory for the Kernel.  
+
+You can find more information on this subject later (in progress). 
 
 Finally, this "method" allows me to use a single code to use the PS and the PL, since only the memory address space differs. 
 
