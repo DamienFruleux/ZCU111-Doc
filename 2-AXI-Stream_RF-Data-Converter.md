@@ -51,7 +51,8 @@ Moreover, as I wrote above, if a *TDATA* signal arrives on the DMA before it is 
 
 todo : need to complet, still in progress
 
-![ADC-to-PS](./images/ADC-to-PS.png?raw=true "ADC-to-PS Schema")
+![ADC-to-PS_1](./images/ADC-to-PS_1.png?raw=true "ADC-to-PS Schema")
+![ADC-to-PS_2](./images/ADC-to-PS_2.png?raw=true "ADC-to-PS Schema")
 
 # Sampling Rate & Signal Duration
 
