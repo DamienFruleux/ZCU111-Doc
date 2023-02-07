@@ -37,7 +37,7 @@ It is important to know that the RF Data Converter IP do not perfectly respect t
 
 As the DAC does not take into account the *TVALID* signal, it permanently samples the data coming from *TDATA*. These being by definition not reset to 0 at the end of the transfer, the DAC continues to sample the last frame it reads in the previous IP (AXI4 FIFO) ! 
 
-**It is then necessary to create an IP which imposes to put at zero the *TDATA* signal for the DAC when the *TVALID* signal coming from the DMA is 0 : I called this IP "FIFO_DAC_sync".**
+**It is then necessary to create an IP which imposes to put at zero the *TDATA* signal for the DAC when the *TVALID* signal coming from the DMA is 0 : I called this IP "FIFO_sync".**
 
 ![PS-to-DAC](./images/PS-to-DAC.png?raw=true "PS-to-DAC Schema")
 
@@ -59,17 +59,17 @@ todo : need to complet, still in progress
 
 For each sampling rate, you need to adapt the AXI4-Stream bus upstream. In practice, it is only necessary to adjust the frequency of the clock, because DACs always used a **flow of 256 bits**: in **1 frame**, there are **16 samples of 16 bits** of data (i.e. 16 samples of 2 bytes). So **it used a 256 bits AXI4-Stream interface**.
 
-The ZCU111 has 8 DACs operating at **14-bit resolution**, up to a sampling rate of **6.554 GSa/s**, but **6.144 GSa/s** is more practical because it is a multiple of 256 (bits).
+The ZCU111 has 8 DACs operating at **14-bit resolution**, up to a sampling rate of **6.554 GSa/s**, but **6.144 GSa/s** is more practical because it is a multiple of 256 (bits). In practice, we will use in the code unsigned integers coded on 16 bits (uint16_t) : the 2 most significant bits are not representative.
 
-As we have already seen previously, we can generate a signal up to a sampling rate of 2 GSa/s with the PS (2.6 GSa/s max) and up to a sampling rate of 6 GSa/s with the PL (9.375 GSa/s max). I also remind that we can store up to 16 GSa in the PS (with RAM upgrade) and up to 2 GSa in the PL. 
+As we have already seen previously, we can generate a signal up to a sampling rate of 2.048 GSa/s with the PS (2.6 GSa/s max) and up to a sampling rate of 6.144 GSa/s with the PL (9.375 GSa/s max). I also remind that we can store up to 14 GSa (and not 16 GSa, this is not a mistake, we will explain next how, with RAM upgrade) and up to 2 GSa in the PL. 
 
 I add below the details of the calculations, as well as the frequency of the necessary clock :
 
-- For a sampling rate of **1.024 GSa/s**, we need a throughput of **2 GB/s**, and therefore a **64 MHz clock**. We get a signal of **16 secs for the PS** and **2 secs for the PL**.
+- For a sampling rate of **1.024 GSa/s**, we need a throughput of **2 GB/s**, and therefore a **64 MHz clock**. We get a signal of **14 secs for the PS** and **2 secs for the PL**.
 
 > More precisely: 256 bits * 64 MHz = 16 384 x 10^6 bps = 16 Gbps = 2 GB/s (= 2 Go/s) = 1.024 GSa/s
 
-- For a sampling rate of **2.048 GSa/s**, we need a throughput of **4 GB/s**, and therefore a **128 MHz clock**. We get a signal of **8 secs for the PS** and **1 sec for the PL**.
+- For a sampling rate of **2.048 GSa/s**, we need a throughput of **4 GB/s**, and therefore a **128 MHz clock**. We get a signal of **7 secs for the PS** and **1 sec for the PL**.
 
 > More precisely: 256 bits * 128 MHz = 32 768 x 10^6 bps = 32 Gbps = 4 GB/s (= 4 Go/s) = 2.048 GSa/s
 
@@ -85,73 +85,23 @@ I add below the details of the calculations, as well as the frequency of the nec
 
 For each sampling rate, you need to adapt the AXI4-Stream bus upstream. In practice, it is only necessary to adjust the frequency of the clock, because ADCs always used a **flow of 128 bits**: in **1 frame**, there are **8 samples of 16 bits** of data (i.e. 8 samples of 2 bytes). So **it used a 128 bits AXI4-Stream interface**.
 
-The ZCU111 has 8 DACs operating at **12-bit resolution**, up to a sampling rate of **4.096 GSa/s**.
+The ZCU111 has 8 DACs operating at **12-bit resolution**, up to a sampling rate of **4.096 GSa/s**. In practice, we will use in the code unsigned integers coded on 16 bits (uint16_t) : the 4 most significant bits are not representative. This still represents 25% of the data transferred unnecessarily. We will see later that it is possible to compress the data to avoid such waste
 
-As we have already seen in the previous document (on DMA), we can acquire a signal up to a sampling rate of 2 GSa/s with the PS (2.6 GSa/s max) and up to a sampling rate of 6 GSa/s with the PL (9.375 GSa/s max). I also remind that we can store 16 GSa in the PS and 2 GSa in the PL. 
+As we have already seen in the previous document (on DMA), we can acquire a signal up to a sampling rate of 2.048 GSa/s with the PS (2.6 GSa/s max) and up to a sampling rate of 4.096 GSa/s with the PL (9.375 GSa/s max). I also remind that we can store up to 14 GSa (and not 16 GSa, this is not a mistake, we will explain next how, with RAM upgrade) and up to 2 GSa in the PL. 
 
 I add below the details of the calculations, as well as the frequency of the necessary clock :
 
-- For a sampling rate of **1.024 GSa/s**, we need a throughput of **2 GB/s**, and therefore a **128 MHz clock**. We get a signal of **16 secs for the PS** and **2 secs for the PL**.
+- For a sampling rate of **1.024 GSa/s**, we need a throughput of **2 GB/s**, and therefore a **128 MHz clock**. We get a signal of **14 secs for the PS** and **2 secs for the PL**.
 
 > More precisely: 128 bits * 128 MHz = 16 384 x 10^6 bps = 16 Gbps = 2 GB/s (= 2 Go/s) = 1.024 GSa/s
 
-- For a sampling rate of **2.048 GSa/s**, we need a throughput of **4 GB/s**, and therefore a **256 MHz clock**. We get a signal of **8 secs for the PS** and **1 sec for the PL**.
+- For a sampling rate of **2.048 GSa/s**, we need a throughput of **4 GB/s**, and therefore a **256 MHz clock**. We get a signal of **7 secs for the PS** and **1 sec for the PL**.
 
 > More precisely: 128 bits * 256 MHz = 32 768 x 10^6 bps = 32 Gbps = 4 GB/s (= 4 Go/s) = 2.048 GSa/s
 
 - For a sampling rate of **4.096 GSa/s**, we need a throughput of **8 GB/s**, and therefore a **512 MHz clock**. We get a signal of **0.5 secs for the PL** (PS is not fast enough).
 
 > More precisely: 128 bits * 512 MHz = 65 536 x 10^6 bps = 64 Gbps = 8 GB/s (= 8 Go/s) = 4.096 GSa/s
-
-# Use multiple channels at the same time
-
-## Use multi DMA 
-
-It is often necessary to work with several converters at the same time.
-
-The obvious method is easy to realize: just multiply the DMAs and run the code in parallel.
-
-However, most of the time it is necessary that the signals are synchronized, so that the information is available at the same time. 
-This complicates things, because even if you write the code in C in a very optimized way, it is difficult to guarantee that the data is perfectly synchronized and available at exactly the same time. In some critical cases, this approximation is not possible, which is my case.
-
-## Use single DMA
-
-### With DACs
-
-For 2 perfectly synchronized DACs, the 2 signals (or channels) must be sent alternately in the same data stream. 
-
-If we keep the same sampling frequency of the **total** signal and the same number of **total** samples, this obviously leads to a division by 2 of the sampling frequency **per channel**, and a division by 2 of the number of samples **per channel**.
-
-> For example, instead of having in the PS 1 signal composed of 14 GSa and sampled at 2.048 GSa/s, we will have 2 signals composed **in total** of 14 GSa and sampled **in total** at 2.048 GSa/s, which gives 7 GSa **per channel** and 1.024 GSa/s **per channel**.
-
-In the code, it is necessary to send to the DMA a buffer which contains the samples of channel A on the even data and the samples of channel B on the odd data.
-
-In the design, after the DMA, I need an IP that separates the even data from the odd data and sends them to channel A and channel B respectively.
-
-### With ADCs
-
-For 2 perfectly synchronized DACs, we do exactly the same thing, but in the opposite direction.
-
-In the design, before the DMA, we need an IP that joins the samples of channel A and channel B alternately on the even and odd data of the data stream.
-
-In the code, it is necessary to receive from the DMA the buffer that contains the samples of channel A on the even data and the samples of channel B on the odd data.
-
-# Compressing the data
-
-It is possible to compress the data: in fact, we specified a little earlier that the DAC data is on 14 bits, and the ADC data on 12 bits.
-
-However, the AXI Stream bus requires data on 16 bits (like the code afterwards which uses unsigned integers on 16 bits: u_int16), the remaining 2 or 4 MSB bits are simply set to zero!
-
-It is therefore possible to save respectively 12.5 and 25% of the flow necessary to send the same information. 
-In the case of DACs, this is relatively low, but in the case of ADCs, the compression is very important!
-
-Although this is not necessary in the examples presented for the moment, it will be useful if we wish to use the 4 SFP28 connectors later on. Indeed, with a data rate of 4 * 25Gbps = 100 Gbps, i.e. 12.5 GB/s (or 12.5 Go/s), it is not possible to send 4 data streams from the ADCs at 2 GSa/s each, because this requires a cumulative data rate of 4*2GSa/s = 8GSa/s = 16 GB/s (= 16 Go/s). With a 25% compression (12 bits instead of 16), we get a throughput of 12 GB/s (= 12 Go/s), which is well compatible with the throughput of the 4 SFP28 ports.
-
-To do this, we need to perform an IP in Vivado that removes the 4 MSB bits from the RF signals of the ADCs and aggregates 4 * 12 bits into 3 * 16 bits before sending the data to the DMA. 
-
-In the code, it will be necessary to add a function which selects the 12 bits of MSB and which adds 4 bits for each sample, in order to have again data on unsigned integers of 16 bits!
-
-todo : add schema
 
 # Technical Characteristics of RF parts
 
@@ -164,7 +114,7 @@ Half of the ports use baluns and RF filters, while the others are differential p
 In particular, some ports are identified as LF, because they have a 0-1GHz low-cut filter, and others as HF, because they have a 1-4GHz bandpass filter.
 
 We must be careful with the sampling frequency/filter pairs in order to respect the Nyquist-Shannon sampling theorem.
-If the sampling frequency is 1 GSa/s, the analog signal cannot exceed the frequency of 512 MHz, for 2 GSa/s it is 1GHz, for 4 GSa/s it is 2 GHz and for 6 GSa it is 3GHz.
+If the sampling frequency is 1 GSa/s, the analog signal cannot exceed the frequency of 512 MHz, for 2 GSa/s it is 1GHz, for 4 GSa/s it is 2 GHz and for 6 GSa it is 3GHz (in any case, the maximum bandwidth frequency on the ZCU111 SoC is 4 GHz).
 
 ## DACs organization
 
@@ -206,6 +156,76 @@ The converters in the same tile share different elements :
 - The AXI-Stream clock
 - The PLL (optional) which allows to generate a clock at a desired frequency if needed
 
-## DAC_CLKIN & ADC_CLKIN
+The selected sampling rate determines the frequency of the AXI-Stream clock.
 
-todo
+It is possible to generate a clock from this IP that can be used as an input (loop). It will be necessary to multiply the frequency of this clock by 2 when using ADCs (nothing to do for DACs).
+
+We will keep the default value of the PLL (409.600 MHz) which is adapted to our case. However, it is possible to change it, in particular if we wish to use a sampling frequency that is not a multiple of 2, but a multiple of 10 (1.024 GSa/s vs 1 GSa/s). 
+
+The converters in the same tile share the same clocks, so we can be sure that they will be perfectly synchronised with each other. Therefore, the converters must be correctly associated, giving preference to those in the same tile, as explained above.
+
+However, it must be ensured that the digital signals from both channels are available at the same time to be converted together.
+
+# Clocks settings 
+
+todo : PLL / LMK04208 & LMX2594 / DAC_CLKIN & ADC_CLKIN
+
+# Use multiple channels at the same time
+
+It is often necessary to work with several converters at the same time.
+
+The obvious method is easy to realize: just multiply the DMAs and run the control code in parallel.
+
+## Use multi DMA 
+
+However, most of the time it is necessary that the signals are synchronized, so that the information is available at the same time. 
+This complicates things, because even if you write the code in C in a very optimized way, it is difficult to guarantee that the data is perfectly synchronized and available at exactly the same time. In some critical cases, this approximation is not possible, which is my case.
+
+## Use single DMA
+
+### With DACs
+
+For 2 perfectly synchronized DACs, the 2 signals (or channels) must be sent alternately in the same data stream. For this, we will use a little trick which consists in placing on the even elements of our signal the samples of the DAC_A and on the odd elements of our signal, the samples of the DAC_B.
+
+If we keep the same sampling frequency of the **total** signal and the same number of **total** samples, this obviously leads to a division by 2 of the sampling frequency **per channel**, and a division by 2 of the number of samples **per channel**.
+
+> For example, instead of having in the PS 1 signal composed of 14 GSa and sampled at 2.048 GSa/s, we will have 2 signals composed **in total** of 14 GSa and sampled **in total** at 2.048 GSa/s, which gives 7 GSa **per channel** and 1.024 GSa/s **per channel**.
+
+In the code, it is necessary to send to the DMA a buffer which contains the samples of channel A on the even data and the samples of channel B on the odd data.
+
+In the design, after the DMA, I need an IP that separates the even data from the odd data and sends them to channel A and channel B respectively : I called this IP "AXIS_SPLITTER_2".
+
+However, it is necessary to double the width of the upstream buses if you want to keep the same sampling rate as before, so they go from 256 bits (for 1 DAC at 2,048 GSa/s) to 512 bits (for 2 DACs at 1,024 GSa/s). As a result, the required clock is reduced from 128MHz to 64MHz.
+
+![AXIS_SPLITTER_2](./images/AXIS_SPLITTER_2.png?raw=true "AXIS_SPLITTER_2 IP")
+
+### With ADCs
+
+For 2 perfectly synchronized ADCs, we do exactly the same thing, but in the opposite direction.
+
+In the design, before the DMA, we need an IP that joins the samples of channel A and channel B alternately on the even and odd data of the data stream : I called this IP "AXIS_COMBINER_2".
+
+In the same way, it is necessary to double the width of the upstream buses if you want to keep the same sampling rate as before, so they go from 128 bits (for 1 ADC at 2,048 GSa/s) to 256 bits (for 2 ADCs at 1,024 GSa/s). As a result, the required clock is reduced from 256MHz to 128MHz.
+
+In the code, it is necessary to receive from the DMA the buffer that contains the samples of channel A on the even data and the samples of channel B on the odd data.
+
+![AXIS_COMBINER_2](./images/AXIS_COMBINER_2.png?raw=true "AXIS_COMBINER_2 IP")
+
+# Compressing the data
+
+It is possible to compress the data: in fact, we specified a little earlier that the DAC data is on 14 bits, and the ADC data on 12 bits.
+
+However, the AXI Stream bus requires data on 16 bits (like the code afterwards which uses unsigned integers on 16 bits: uint16_t), the remaining 2 or 4 MSB bits are simply set to zero!
+
+It is therefore possible to save respectively 12.5 and 25% of the flow necessary to send the same information. 
+In the case of DACs, this is relatively low, but in the case of ADCs, the compression is very important!
+
+Although this is not necessary in the examples presented for the moment, it will be useful if we wish to use the 4 SFP28 connectors later on. Indeed, with a data rate of 4 * 25Gbps = 100 Gbps, i.e. 12.5 GB/s (or 12.5 Go/s), it is not possible to send 4 data streams from the ADCs at 2 GSa/s each, because this requires a cumulative data rate of 4*2.048 GSa/s = 8.192 GSa/s = 16 GB/s (= 16 Go/s). With a 25% compression (12 bits instead of 16), we get a throughput of 12 GB/s (= 12 Go/s), which is well compatible with the throughput of the 4 SFP28 ports.
+
+To do this, we need to perform an IP in Vivado that removes the 4 MSB bits from the RF signals of the ADCs and aggregates 4 * 12 bits into 3 * 16 bits before sending the data to the DMA. 
+
+In the code, it will be necessary to add a function which selects the 12 bits of MSB and which adds 4 bits for each sample, in order to have again data on unsigned integers of 16 bits!
+
+![DATA_COMPRESSION](./images/DATA_COMPRESSION.png?raw=true "DATA_COMPRESSION IP")
+
+todo : add schema
