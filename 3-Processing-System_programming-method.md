@@ -77,7 +77,7 @@ While it may work, it doesn't allow us to manage our transfers accurately enough
 
 ### 2- Buffer size
 
-By default, it is not possible to allocate more than 128MB of data using the *allocate* function provided by pynq : [This buffer is allocated inside the kernel space using xlnk driver. The maximum allocatable memory is defined at kernel build time using the CMA memory parameters. For Pynq-Z1 kernel, it is specified as 128MB] (https://pynq.readthedocs.io/en/v2.0/_modules/pynq/xlnk.html).
+By default, it is not possible to allocate more than 128MB of data using the *allocate* function provided by pynq : [This buffer is allocated inside the kernel space using xlnk driver. The maximum allocatable memory is defined at kernel build time using the CMA memory parameters. For Pynq-Z1 kernel, it is specified as 128MB.](https://pynq.readthedocs.io/en/v2.0/_modules/pynq/xlnk.html).
 
 This documentation is from version 2.0 of pynq, it is possible that the size has increased, especially for the ZCU111, but in any case, the principle remains the same: there is a significant size limit.
 
