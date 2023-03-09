@@ -1,4 +1,4 @@
-# Introduction
+# 1- Introduction
 
 There are different ways to proceed for the "data management". 
 
@@ -12,7 +12,7 @@ For reasons of simplicity, we preferred to continue to load the overlay using th
 
 As there are 2 types of memories (PS and PL) that can be used in each case, I will detail the different possibilities. Be careful though, not all possibilities are possible, especially with Pynq.
 
-# General operation of the Vivado design
+# 2- General operation of the Vivado design
 
 The operating principle is relatively simple and remains the same in the different cases.
 
@@ -27,11 +27,11 @@ For the ADCs, the steps are as follows:
 - 3: we recover the samples received from the memory
 
 
-# Use Pynq libraries
+# 3- Use Pynq libraries
 
 As I explained, the pynq_notebook uses the Pynq libraries. Although it works perfectly, there are some limitations that can become annoying in some cases. 
 
-## Program Operation
+## A- Program Operation
 
 The explanations of [dma class of the Pynq library](https://pynq.readthedocs.io/en/latest/pynq_libraries/dma.html) are very well explained and illustrate very well the different steps required.
 
@@ -65,9 +65,9 @@ dma.sendchannel.wait()
 
 It works perfectly. However, there are a number of limitations.
 
-## Limits with PSRAM
+## B- Limits with PSRAM
 
-### 1- Continuous transfert
+### 1-Continuous transfert
 
 Note that if it is possible to make continuous transfers in C (explained below), Pynq does not yet offer this method directly (to my knowledge).
 
@@ -75,7 +75,7 @@ I have previously how to perform [continuous transfers](https://github.com/Damie
 
 While it may work, it doesn't allow us to manage our transfers accurately enough. 
 
-### 2- Buffer size
+### 2-Buffer size
 
 By default, it is not possible to allocate more than 128MB of data using the *allocate* function provided by pynq : [This buffer is allocated inside the kernel space using xlnk driver. The maximum allocatable memory is defined at kernel build time using the CMA memory parameters. For Pynq-Z1 kernel, it is specified as 128MB.](https://pynq.readthedocs.io/en/v2.0/_modules/pynq/xlnk.html)
 
@@ -91,16 +91,16 @@ You will find more information [here](https://discuss.pynq.io/t/pynq-maximum-all
 
 Although relatively simple, it requires additional work and does not necessarily correspond to our specifications.
 
-### 3- Dynamic memory allocation
+### 3-Dynamic memory allocation
 
 Pynq uses dynamic memory allocation (malloc function in C), which means that it asks the kernel to allocate a certain amount of memory. So there are limits on the amount of memory allocated, since the OS must keep a certain amount of memory: it is not possible to allocate all 4GB of RAM to store data ! Even though the amount of memory that can be used is considerably increased with the cma library.
 
-### 4- Data arrangement in memory
+### 4-Data arrangement in memory
 
 Finally, even if it is possible to allocate the desired amount of memory after some manipulations, it is not certain that the data are arranged continuously in memory, especially if there are large amounts of data, which could potentially cause some problems since **the analog signal is continuous over time** : we could then see artifacts appear in the analog signal, like holes.
 The DMA can use a mechanism called SG for this. It will be necessary to make sure that the FIFO memory depth is large enough to allow time for the DMA to "change memory area". However, this point is more of a question than a statement. 
 
-## Limits with PLRAM
+## C- Limits with PLRAM
 
 With Pynq, to use the PLRAM, the [mmio](https://pynq.readthedocs.io/en/v2.6.1/pynq_libraries/mmio.html) class must be used. In particular, to write data, you must use the function **mmio.write(address_offset, data)**.
 
@@ -112,14 +112,13 @@ Finally, although it seems possible, the documentation does not seem to consider
 
 If you have any information, don't hesitate to share it with me.
 
-
 As I explained, the pynq_notebook uses the Pynq libraries. Although it works perfectly, there are some limitations that can become annoying in some cases. 
 
-# Use C standard libraries
+# 4- Use C standard libraries
 
 In order to overcome these limitations, we propose not to use the Pynq library anymore, but to use lower level functions. In particular, I have chosen to use the C language to initiate DMA transfers by directly using the control registers available in [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma): we can perform continuous transfers of all available memory, and not be limited to a single DMA transfer.
 
-## Program Operation
+## A- Program Operation
 
 I resume the explanations of [Lauri Vosandi](https://lauri.võsandi.com/hdl/zynq/xilinx-dma.html), which are in my opinion perfect: 
 
@@ -203,17 +202,17 @@ We notice that we don't use dynamic memory allocation in this part, but we direc
 
 It works perfectly. This time without limitations, but with more knowledge needed!
 
-## Use PLRAM
+## B- Use PLRAM
 
 With the right memory addresses, It works perfectly and without any problems because it is not used by the Linux Kernel. Please refer to [UG1085](https://docs.xilinx.com/r/en-US/ug1085-zynq-ultrascale-trm) for more information about memory address spaces. 
 
-## Use PSRAM
+## C- Use PSRAM
 
-### 1- Use "LAURI" example
+### 1-Use "LAURI" example
 
 With the right memory addresses, It works but you have to be careful, because this memory space is not reserved and can be used by the kernel ! This can be interesting to do some tests, but should not be used in a project!
 
-### 2- Use kernel module
+### 2-Use kernel module
 
 As Lauri explained earlier, you have to be careful with the use of memory. In fact, with this example, we use a memory area without in a "dirty" way. In fact, it would be necessary to develop a kernel module that would reserve this memory area, in order to be sure that the kernel cannot use it for other processes. 
 
@@ -226,11 +225,11 @@ This mechanism does not do any kind of mapping, it's a pure reservation mechanis
 
 I haven't had time to make a kernel module for this yet. But I might do it one day.
 
-### 3- Use kernel module to allocate memory
+### 3-Use kernel module to allocate memory
 
 first **reserv memory** and **allocate memory** next
 
-### 4- Use Dynamic memory allocation
+### 4-Use Dynamic memory allocation
 
 I would like to point out that it is surely possible to do a dynamic allocation (*malloc* function) and to use the address of the allocated memory space.
 
@@ -238,21 +237,21 @@ However, although this avoids programming in the kernel, one cannot be sure that
 
 I haven't tested this theory yet, maybe I'll do it sometime. 
 
-### 5- Use Dynamic memory allocation in a kernel module
+### 5-Use Dynamic memory allocation in a kernel module
 
 It is also possible to use dynamic memory allocation in the kernel, using the *kmalloc* function. This solves the problems related to memory allocation, in addition to allowing **continuous** memory allocation!
 
 Also, I haven't investigated this possibility yet
 
-### Use more than 4 GB SODIMM RAM
+## D- Use more than 4 GB SODIMM RAM
 
 As explained above, it is possible to change the SODIMM ZCU111 RAM strip, in order to have 32 GB (or 32 GB) of memory in the PS.
 
-#### Linux see all 32GB of RAM
+### 1-Linux see all 32GB of RAM
 
 Note however that it is possible to use the 32GB of RAM with the Linux Kernel and to allocate the necessary amount of memory dynamically. I cannot however certify the continuity of the data in memory. (Note that with a kernel module and the kmalloc function this seems possible). 
 
-#### Linux always "see" 4GB of RAM
+### 2-Linux always "see" 4GB of RAM
 
 Indeed, by default the ZCU111 has a 4GB SODIMM. If we use the method described above, we run the risk of using memory addresses potentially used by the Linux Kernel. As I needed a lot of memory and not to use dynamic allocation (data continuity), I upgraded the SODIMM up to the maximum possible (32GB) and I made sure that it is well mapped in /dev/memory, but without the Linux kernel being able to exploit it like classic RAM. More simply, linux still sees 4GB of RAM, but can access the other 28GB of the PS in the same way as the 4GB of the PL. As the samples are coded on 16 bits (=2 bytes or 2 octets), it is possible to store up to 14 GSa in this unallocated memory for the Kernel.  
 
@@ -260,7 +259,7 @@ You can find more information on this subject later (in progress).
 
 Finally, this "method" allows me to use a single code to use the PS and the PL, since only the memory address space differs. 
 
-# Use C program instead of python program
+# 5- Use C program instead of python program
 
 Since C is a compiled language and Python is an interpreted language, it is sometimes necessary to use the first one. In particular if we want to be sure that the different instructions (for the control of the DMA) located in the loop (which allows to make a continuous transfer) are executed quickly enough, it is perhaps necessary to pass by a language closer to the machine.
 
