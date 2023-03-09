@@ -1,10 +1,10 @@
-# Definitions of DAC and ADC
+# 1- Definitions of DAC and ADC
 
 Literally, a [Digital to Analog Converter](https://en.wikipedia.org/wiki/Digital-to-analog_converter) (DAC) is a system that converts a digital signal into an analog signal and an [Analog to Digital Converter](https://en.wikipedia.org/wiki/Analog-to-digital_converter) (ADC) is a system that converts an analog signal into a digital signal.
 
 In this example, I will use the [Zynq UltraScale+ RFSoC RF Data Converter](https://www.xilinx.com/products/intellectual-property/rf-data-converter.html) Xilinx IP to **transfer data from the DMA to the DAC (or from the ADC to the DMA)** using an **AXI4-Stream interface**.
 
-# AXI-Stream Protocol
+# 2- AXI-Stream Protocol
 
 ![AXI4-Stream](./images/AXI4-Stream.png?raw=true "AXI4-Stream Schema")
 
@@ -29,11 +29,11 @@ The Read Channel of the DMA uses the first 3 signals to send the signal to the D
 
 The number of frames desired is variable: in particular if you want to have a continuous signal ! (TODO)
 
-# Signal Processing
+# 3- Signal Processing
 
 It is important to know that the RF Data Converter IP do not perfectly respect the AXI4-Stream protocol. In fact, we have continuous data flows, which use the AXI4-Stream protocol only as a basis. That is to say that the 2 converters send and receive data all the time on the *TDATA* signal, whatever the value of *TVALID* (and *TREADY*). It is therefore necessary to **condition these flows** so that they respect the AXI4-Steam protocol and interact properly with .
 
-## Using DAC
+## A- Using DAC
 
 As the DAC does not take into account the *TVALID* signal, it permanently samples the data coming from *TDATA*. These being by definition not reset to 0 at the end of the transfer, the DAC continues to sample the last frame it reads in the previous IP (AXI4 FIFO) ! 
 
@@ -41,7 +41,7 @@ As the DAC does not take into account the *TVALID* signal, it permanently sample
 
 ![PS-to-DAC](./images/PS-to-DAC.png?raw=true "PS-to-DAC Schema")
 
-## Using ADC
+## B- Using ADC
 
 Since the ADC continuously generates data on the *TDATA* signal, it never changes the *TVALID* signal, which is the *TVALID* signal, which remains at 1 permanently.
 
@@ -54,9 +54,9 @@ todo : need to complet, still in progress
 ![ADC-to-PS_1](./images/ADC-to-PS_1.png?raw=true "ADC-to-PS Schema")
 ![ADC-to-PS_2](./images/ADC-to-PS_2.png?raw=true "ADC-to-PS Schema")
 
-# Sampling Rate & Signal Duration
+# 4- Sampling Rate & Signal Duration
 
-## Using DAC
+## A- Using DAC
 
 For each sampling rate, you need to adapt the AXI4-Stream bus upstream. In practice, it is only necessary to adjust the frequency of the clock, because DACs always used a **flow of 256 bits**: in **1 frame**, there are **16 samples of 16 bits** of data (i.e. 16 samples of 2 bytes). So **it used a 256 bits AXI4-Stream interface**.
 
@@ -82,7 +82,7 @@ I add below the details of the calculations, as well as the frequency of the nec
 
 > More precisely: 256 bits * 384 MHz = 98 304 x 10^6 bps = 96 Gbps = 12 GB/s (= 12 Go/s) = 6.144 GSa/s
 
-## Using ADC
+## B- Using ADC
 
 For each sampling rate, you need to adapt the AXI4-Stream bus upstream. In practice, it is only necessary to adjust the frequency of the clock, because ADCs always used a **flow of 128 bits**: in **1 frame**, there are **8 samples of 16 bits** of data (i.e. 8 samples of 2 bytes). So **it used a 128 bits AXI4-Stream interface**.
 
@@ -104,7 +104,7 @@ I add below the details of the calculations, as well as the frequency of the nec
 
 > More precisely: 128 bits * 512 MHz = 65 536 x 10^6 bps = 64 Gbps = 8 GB/s (= 8 Go/s) = 4.096 GSa/s
 
-# Technical Characteristics of RF parts
+# 5- Technical Characteristics of RF parts
 
 ![RF_summary](./images/RF_summary.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - Summary")
 
@@ -117,7 +117,7 @@ In particular, some ports are identified as LF, because they have a 0-1GHz low-c
 We must be careful with the sampling frequency/filter pairs in order to respect the Nyquist-Shannon sampling theorem.
 If the sampling frequency is 1 GSa/s, the analog signal cannot exceed the frequency of 512 MHz, for 2 GSa/s it is 1GHz, for 4 GSa/s it is 2 GHz and for 6 GSa it is 3GHz (in any case, the maximum bandwidth frequency on the ZCU111 SoC is 4 GHz).
 
-## DACs organization
+## A- DACs organization
 
 ![RF_DAC_1](./images/RF_DAC_1.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-DAC")
 ![RF_DAC_2](./images/RF_DAC_2.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-DAC")
@@ -133,7 +133,7 @@ In conclusion, we have :
 - DAC Tile  229 - DAC Pair 0,1 - 1-4 GHz (HF_TX) - SMA J7 and J8
 - DAC Tile  229 - DAC Pair 2,3 - 0-1 GHz (LF_TX) - SMA J6 and J5
 
-## ADCs organization
+## B- ADCs organization
 
 ![RF_ADC_1](./images/RF_ADC_1.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-ADC")
 ![RF_ADC_2](./images/RF_ADC_2.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-ADC")
@@ -149,7 +149,7 @@ In conclusion, we have :
 - DAC Tile  225 - DAC Pair 0,1 - 1-4 GHz (HF_RX) - SMA J2 and J1
 - DAC Tile  224 - DAC Pair 0,1 - 0-1 GHz (LF_RX) - SMA J4 and J3
 
-## Sampling Rate, AXI-Stream Clock & PLL
+## C- Sampling Rate, AXI-Stream Clock & PLL
 
 The converters in the same tile share different elements : 
 
@@ -167,24 +167,24 @@ The converters in the same tile share the same clocks, so we can be sure that th
 
 However, it must be ensured that the digital signals from both channels are available at the same time to be converted together.
 
-# Clocks settings 
+# 6- Clocks settings 
 
 todo : PLL / LMK04208 & LMX2594 / DAC_CLKIN & ADC_CLKIN
 
-# Use multiple channels at the same time
+# 7- Use multiple channels at the same time
 
 It is often necessary to work with several converters at the same time.
 
 The obvious method is easy to realize: just multiply the DMAs and run the control code in parallel.
 
-## Use multi DMA 
+## A- Use multi DMA 
 
 However, most of the time it is necessary that the signals are synchronized, so that the information is available at the same time. 
 This complicates things, because even if you write the code in C in a very optimized way, it is difficult to guarantee that the data is perfectly synchronized and available at exactly the same time. In some critical cases, this approximation is not possible, which is my case.
 
-## Use single DMA
+## B- Use single DMA
 
-### With DACs
+### 1-With DACs
 
 For 2 perfectly synchronized DACs, the 2 signals (or channels) must be sent alternately in the same data stream. For this, we will use a little trick which consists in placing on the even elements of our signal the samples of the DAC_A and on the odd elements of our signal, the samples of the DAC_B.
 
@@ -200,7 +200,7 @@ However, it is necessary to double the width of the upstream buses if you want t
 
 ![AXIS_SPLITTER_2](./images/AXIS_SPLITTER_2.png?raw=true "AXIS_SPLITTER_2 IP")
 
-### With ADCs
+### 2-With ADCs
 
 For 2 perfectly synchronized ADCs, we do exactly the same thing, but in the opposite direction.
 
@@ -212,7 +212,7 @@ In the code, it is necessary to receive from the DMA the buffer that contains th
 
 ![AXIS_COMBINER_2](./images/AXIS_COMBINER_2.png?raw=true "AXIS_COMBINER_2 IP")
 
-# Compressing the data
+# 8- Compressing the data
 
 It is possible to compress the data: in fact, we specified a little earlier that the DAC data is on 14 bits, and the ADC data on 12 bits.
 
