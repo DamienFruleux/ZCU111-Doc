@@ -112,6 +112,8 @@ Finally, although it seems possible, the documentation does not seem to consider
 
 If you have any information, don't hesitate to share it with me.
 
+Note that it is possible that version 2.7 of Pynq now allows it : [PL DRAM allocation support added](https://pynq.readthedocs.io/en/latest/changelog.html#version-2-7-0) ?
+
 # 4- Use C standard libraries
 
 In order to overcome these limitations, we propose not to use the Pynq library anymore, but to use lower level functions. In particular, I have chosen to use the C language to initiate DMA transfers by directly using the control registers available in [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma): we can perform continuous transfers of all available memory, and not be limited to a single DMA transfer.
@@ -196,7 +198,10 @@ munmap((void *) mem, number_octet);
 close(fd);
 
 ```
-We notice that we do not use dynamic memory allocation in this part, but we read and write directly to the memory areas : it should be used with knowledge (see below for more information about this).
+
+We call this method a pseudo device driver. In general, this is not a good approach, and we prefer to make a real device driver, i.e. by developing a kernel module. I will give some information about these methods next. 
+
+Moreover, we notice that we do not use dynamic memory allocation in this part, but we read and write directly to the memory areas : it should be used with knowledge (see below for more information about this).
 However, note that kernel may allocate memory for other processes in this area because this memory space is not reserved. Also, it is possible to delete important information saved by the kernel to these memory addresses. 
 
 It works perfectly. This time without limitations if you use the right memory addresses, but with more knowledge needed!
@@ -224,11 +229,11 @@ This mechanism does not do any kind of mapping, it's a pure reservation mechanis
 
 I haven't had time to make a kernel module for this yet. But I might do it one day.
 
-### 3-Use kernel module to allocate memory
+### 3-Request memory region without kernel module
 
-First **reserv memory** and **allocate memory** next
+It's probably possible, in user mode, to ask the kernel to specifically use a memory space in order to do what you want, but I don't know if it's possible. 
 
-TODO : need to delete ?
+Probably, it is possible that using an array is enough, but I don't know either.
 
 ### 4-Use Dynamic memory allocation
 
@@ -257,9 +262,12 @@ This is the traditional use of RAM, so it is much more flexible because the kern
 
 Moreover, I cannot certify the continuity of the data in memory. (Note that with a kernel module and the kmalloc function this seems possible). 
 
+Finally, there is probably a limit on the size of dynamic allocations!
+
 ### 2-Linux always "see" 4GB of RAM
 
-Indeed, by default the ZCU111 has a 4GB SODIMM. If we use the method described above, we run the risk of using memory addresses potentially used by the Linux Kernel. As I needed a lot of memory and not to use dynamic allocation (data continuity and complexity), I upgraded the SODIMM up to the maximum possible (32GB) and I made sure that it is well mapped in /dev/memory, but without the Linux kernel being able to exploit it like classic RAM. More simply, linux still sees 4GB of RAM, but can access the other 28GB of the PS in the same way as the 4GB of the PL. As the samples are coded on 16 bits (=2 bytes or 2 octets), it is possible to store up to 14 GSa in this unallocated memory for the Kernel.  
+If we use the method described above, we run the risk of using memory addresses potentially used by the Linux Kernel. As I needed a lot of memory and not to use dynamic allocation (data continuity and complexity), I upgraded the SODIMM up to the maximum possible (32GB) and I made sure that it is well mapped in /dev/memory, but without the Linux kernel being able to exploit it like classic RAM. More simply, linux still sees 4GB of RAM, but can access the other 28GB of the PS in the same way as the 4GB of the PL. This gives us much more flexibility as we can manage the remaining 28GB of RAM as we wish.
+As the samples are coded on 16 bits (=2 bytes or 2 octets), it is possible to store up to 14 GSa in this unallocated memory for the Kernel.  
 
 You can find more information on this subject later (in progress). 
 
