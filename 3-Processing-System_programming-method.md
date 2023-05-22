@@ -112,8 +112,6 @@ Finally, although it seems possible, the documentation does not seem to consider
 
 If you have any information, don't hesitate to share it with me.
 
-As I explained, the pynq_notebook uses the Pynq libraries. Although it works perfectly, there are some limitations that can become annoying in some cases. 
-
 # 4- Use C standard libraries
 
 In order to overcome these limitations, we propose not to use the Pynq library anymore, but to use lower level functions. In particular, I have chosen to use the C language to initiate DMA transfers by directly using the control registers available in [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma): we can perform continuous transfers of all available memory, and not be limited to a single DMA transfer.
@@ -198,9 +196,10 @@ munmap((void *) mem, number_octet);
 close(fd);
 
 ```
-We notice that we don't use dynamic memory allocation in this part, but we directly read and write in memory areas. However, note that kernel may allocate memory for other processes in that range. It is therefore used with knowledge (see below for more information on this subject).
+We notice that we do not use dynamic memory allocation in this part, but we read and write directly to the memory areas : it should be used with knowledge (see below for more information about this).
+However, note that kernel may allocate memory for other processes in this area because this memory space is not reserved. Also, it is possible to delete important information saved by the kernel to these memory addresses. 
 
-It works perfectly. This time without limitations, but with more knowledge needed!
+It works perfectly. This time without limitations if you use the right memory addresses, but with more knowledge needed!
 
 ## B- Use PLRAM
 
@@ -210,9 +209,9 @@ With the right memory addresses, It works perfectly and without any problems bec
 
 ### 1-Use "LAURI" example
 
-With the right memory addresses, It works but you have to be careful, because this memory space is not reserved and can be used by the kernel ! This can be interesting to do some tests, but should not be used in a project!
+As already explained, it works but you have to be careful, because this memory space is not reserved and can be used by the kernel ! This can be interesting to do some tests, but should not be used in a project! There are different ways to use the memory more appropriately.
 
-### 2-Use kernel module
+### 2-Use kernel module to request memory region
 
 As Lauri explained earlier, you have to be careful with the use of memory. In fact, with this example, we use a memory area without in a "dirty" way. In fact, it would be necessary to develop a kernel module that would reserve this memory area, in order to be sure that the kernel cannot use it for other processes. 
 
@@ -227,7 +226,9 @@ I haven't had time to make a kernel module for this yet. But I might do it one d
 
 ### 3-Use kernel module to allocate memory
 
-first **reserv memory** and **allocate memory** next
+First **reserv memory** and **allocate memory** next
+
+TODO : need to delete ?
 
 ### 4-Use Dynamic memory allocation
 
@@ -245,15 +246,20 @@ Also, I haven't investigated this possibility yet
 
 ## D- Use more than 4 GB SODIMM RAM
 
+We are limited to 4GB of RAM, without counting the memory needed to run the linux kernel and the operating system. We would like to use as many samples as possible.
 As explained above, it is possible to change the SODIMM ZCU111 RAM strip, in order to have 32 GB (or 32 GB) of memory in the PS.
 
 ### 1-Linux see all 32GB of RAM
 
-Note however that it is possible to use the 32GB of RAM with the Linux Kernel and to allocate the necessary amount of memory dynamically. I cannot however certify the continuity of the data in memory. (Note that with a kernel module and the kmalloc function this seems possible). 
+Note, however, that it is possible to use the 32 GB of RAM with the Linux kernel and dynamically allocate the amount of memory needed.
+
+This is the traditional use of RAM, so it is much more flexible because the kernel chooses and uses the 32 GB of RAM as it wishes. However, it is necessary to manage to allocate the memory as explained in the previous points. 
+
+Moreover, I cannot certify the continuity of the data in memory. (Note that with a kernel module and the kmalloc function this seems possible). 
 
 ### 2-Linux always "see" 4GB of RAM
 
-Indeed, by default the ZCU111 has a 4GB SODIMM. If we use the method described above, we run the risk of using memory addresses potentially used by the Linux Kernel. As I needed a lot of memory and not to use dynamic allocation (data continuity), I upgraded the SODIMM up to the maximum possible (32GB) and I made sure that it is well mapped in /dev/memory, but without the Linux kernel being able to exploit it like classic RAM. More simply, linux still sees 4GB of RAM, but can access the other 28GB of the PS in the same way as the 4GB of the PL. As the samples are coded on 16 bits (=2 bytes or 2 octets), it is possible to store up to 14 GSa in this unallocated memory for the Kernel.  
+Indeed, by default the ZCU111 has a 4GB SODIMM. If we use the method described above, we run the risk of using memory addresses potentially used by the Linux Kernel. As I needed a lot of memory and not to use dynamic allocation (data continuity and complexity), I upgraded the SODIMM up to the maximum possible (32GB) and I made sure that it is well mapped in /dev/memory, but without the Linux kernel being able to exploit it like classic RAM. More simply, linux still sees 4GB of RAM, but can access the other 28GB of the PS in the same way as the 4GB of the PL. As the samples are coded on 16 bits (=2 bytes or 2 octets), it is possible to store up to 14 GSa in this unallocated memory for the Kernel.  
 
 You can find more information on this subject later (in progress). 
 
