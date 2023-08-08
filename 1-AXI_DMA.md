@@ -41,8 +41,8 @@ The maximum width of buffer length register is **2<sup>26</sup>-1 bytes**. This 
 
 It is important to know this because basically, we cannot make a DMA transfer of more than **64 MB - 1 (or 64 Mo - 1)**, in particular if we use the Pynq library. A method to bypass this limit is proposed in the following.
 
-Be careful, vivado is not very clear in the configuration, because it requires a number of bits  :  We can read in [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma/Width-of-Buffer-Length-Register) : 
-*The number of bytes is equal to **2<sup>Length Width</sup>** . So a Length Width of 26 gives a byte count of **67,108,863 bytes**.* 
+Be careful, vivado is not very clear in the configuration, because it requires a number of bits.
+We can read in [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma/Width-of-Buffer-Length-Register) : "*The number of bytes is equal to **2<sup>Length Width</sup>** . So a Length Width of 26 gives a byte count of **67,108,863 bytes**.* "
 
 ## B- Maximum speed of a transfert
 
