@@ -3,6 +3,7 @@
 Literally, a [Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access) (DMA) is a device that allows direct access between the RAM and a device (e.g. HDD, SSD), without the intervention of the processor, except to start and stop the transfer. 
 
 At Xilinx, we find DMAs with the same definition, but which allow more precisely to transfer data between an AXI4 (Memory Map) interface (which is therefore connected to the SODIMM RAM, or **PS RAM**) and an AXI4-Stream interface (which is therefore connected to an **external device**, such as a DAC or ADC).
+For the rest of these explanations, we'll consider only the Xilinx DMA.
 
 Note that it is also possible to use a external (to the processor) RAM, in particular the 4 GB of DDR4 SDRAM, or **PL RAM**. It also uses an AXI4 (Memory Map) interface.
 
@@ -36,12 +37,12 @@ In practice, for the AXI4 (MM) and AXI4-Lite interfaces, it is necessary to read
 
 The maximum width of buffer length register is **2<sup>26</sup>-1 bytes**. This means that a DMA transfert cannot contain more than **64 MB - 1 (or 64 Mo - 1)** of data (this is a hardware limit of the Xilinx IP).
 
-> More precisely : 2<sup>26</sup> bits = 67 108 864 b = 64 Mb = 8 MB (or 8 Mo)
+> More precisely : 2<sup>26</sup> bytes = 67 108 864 B = 64 MB (or 64 Mo)
 
-It is important to know this because basically, we cannot make a DMA transfer of more than 64 MB-1, in particular if we use the Pynq library. A method to bypass this limit is proposed in the following.
+It is important to know this because basically, we cannot make a DMA transfer of more than ***64 MB - 1 (or 64 Mo - 1)**, in particular if we use the Pynq library. A method to bypass this limit is proposed in the following.
 
 Be careful, vivado is not very clear in the configuration, because it requires a number of bits  :  We can read in [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma/Width-of-Buffer-Length-Register) : 
-*The number of bytes is equal to 2 Length Width . So a Length Width of 26 gives a byte count of 67,108,863 bytes.* 
+*The number of bytes is equal to **2<sup>Length Width</sup>** . So a Length Width of 26 gives a byte count of **67,108,863 bytes**.* 
 
 ## B- Maximum speed of a transfert
 
