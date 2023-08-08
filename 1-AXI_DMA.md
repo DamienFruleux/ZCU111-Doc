@@ -55,7 +55,7 @@ Considering that maximum clock frequency of the PS is **333 MHz**, the maximum t
 
 > With a more regular 300 MHz clock :  128 bits * 300 MHz = 38 400 x 10<sup>6</sup> bps = 37.5 Gbps = 4.6875 GB/s (or 4.6875 Go/s)
 
-Moreover, HP1 and HP2 seem to share the same 128 bits AXI MM interface  [UG1085, figure 1-1, page 29](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf), so the speed will not be maximal if they are both used at the same time.
+Moreover, HP1 and HP2 seem to share the same 128 bits AXI4 (MM) interface  [UG1085, figure 1-1, page 29](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf), so the speed will not be maximal if they are both used at the same time.
 
 #### Using Samples per seconds
 
