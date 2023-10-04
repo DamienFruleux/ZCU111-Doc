@@ -1,21 +1,21 @@
-# 1- Definition of DMA
+# 1- Définition d'une DMA
 
-Literally, a [Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access) (DMA) is a device that allows direct access between the RAM and a device (e.g. HDD, SSD), without the intervention of the processor, except to start and stop the transfer. 
-This speeds up data transfer considerably.
+Littéralement, une DMA ([Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access)) est un dispositif qui permet un accès direct entre la RAM et un périphérique (comme un HDD, un SSD...), sans l'intervention du processeur, sauf pour démarrer et arrêter le transfert.
+Cela accélère donc considérablement les transferts de données.
 
-At Xilinx, we find DMAs with the same definition, but which allow more precisely to transfer data between an AXI4 Memory Map interface (which is therefore connected to the SODIMM RAM, or **PS RAM**) and an AXI4-Stream interface (which is therefore connected to an **external device**, such as a DAC or ADC).
-For the rest of these explanations, we'll consider only the Xilinx DMA.
+Dans la nomenclature de Xilinx, on retrouve des DMA avec la même définition, mais qui permettent plus précisément de transférer des données entre une interface AXI4 Memory Map, qui est connectée à la RAM SODIMM, ou **PS RAM**, et une interface AXI4-Stream, qui est connectée à un **périphérique externe**, tel qu'un DAC ou un ADC.
+Pour la suite de ces explications, nous ne considérerons que la DMA au sens de Xilinx.
 
-Note that it is also possible to use a external (to the processor) RAM, in particular the 4 GB of DDR4 SDRAM, or **PL RAM**. It also uses an AXI4 Memory Map interface.
+A noter qu'il est également possible d'utiliser une RAM externe, notamment les 4 Go de DDR4 SDRAM, ou **PL RAM**.
+Cette mémoire vive utilise également une interface AXI4 Memory Map.
 
-In particular, the DMA has 2 separate channels: 
+En particulier, la DMA dispose de 2 canaux distincts :
 
-- Read Channel : **read data from RAM** and write it directly to the device.
+- Le canal de lecture : **lecture des données depuis la RAM** et écriture dans le périphérique.
+- Le canal d'écriture : lecture des données depuis le périphérique et **ecriture dans la RAM**.
 
-- Write Channel : read data from the device and **write it directly to the RAM**.
-
-Finally, the [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) Xilinx IP (Intellectual Property) allows you to transfer data between the PS (Processing System : ARM processors) and the PL (Programable Logical : FPGA).
-More explanations on the use with the PS and details on the use of DAC/ADC will be given next.
+Enfin, l'IP (Intellectual Property) \textit{AXI DMA Controller} fournit par Xilinx permet de transférer des données entre la PS (CPU ARM) et la PL (FPGA).
+De plus amples explications sur son utilisation pour réaliser des transferts entre la PS et les DACs/ADCs seront donnés par la suite.
 
 # 2- AXI4 Protocol
 
