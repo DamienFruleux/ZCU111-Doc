@@ -6,16 +6,17 @@ This speeds up data transfer considerably.
 At Xilinx, we find DMAs with the same definition, but which allow more precisely to transfer data between an AXI4 Memory Map interface (which is therefore connected to the SODIMM RAM, or **PS RAM**) and an AXI4-Stream interface (which is therefore connected to an **external device**, such as a DAC or ADC).
 For the rest of these explanations, we'll consider only the Xilinx DMA.
 
-Note that it is also possible to use a external (to the processor) RAM, in particular the 4 GB of DDR4 SDRAM, or **PL RAM**. It also uses an AXI4 Memory Map interface.
+Note that it is also possible to use a external RAM, in particular the 4 GB of DDR4 SDRAM, or **PL RAM**.
+It also uses an AXI4 Memory Map interface.
 
 In particular, the DMA has 2 separate channels: 
 
-- Read Channel : **read data from RAM** and write it directly to the device.
+- Read Channel : **read data from RAM** and write it to the device.
 
-- Write Channel : read data from the device and **write it directly to the RAM**.
+- Write Channel : read data from the device and **write it to the RAM**.
 
 Finally, the [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) Xilinx IP (Intellectual Property) allows you to transfer data between the PS (Processing System : ARM processors) and the PL (Programable Logical : FPGA).
-More explanations on the use with the PS and details on the use of DAC/ADC will be given next.
+More detailed explanations of its use for transfers between PS and DACs/ADCs will be given later.
 
 # 2- AXI4 Protocol
 
