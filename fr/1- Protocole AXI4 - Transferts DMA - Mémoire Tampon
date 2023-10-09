@@ -16,8 +16,8 @@ Elle est utile pour les communications simples et à faible débit en mémoire (
 Les interfaces et les transferts AXI4-Stream n'ont pas de phase d'adressage et ne sont donc pas considérés comme étant mappées en mémoire.
 Utile pour les flux de données à grande vitesse (j'aime parler de "transfert temps réel" pour illustrer la différence avec des transferts par paquets comme l'AXI4 Memory Map).
 
-En pratique, pour les interfaces AXI4 Memory Map et AXI4-Lite, il est nécessaire de lire ou d'écrire dans les registres fournis aux bonnes adresses.
-Pour utiliser l'interface AXI4-Stream, il faut une DMA.
+En pratique, pour les interfaces AXI4 Memory Map et AXI4-Lite, il est nécessaire de lire ou d'écrire dans les registres de configuration aux bonnes adresses.
+Pour exploiter l'interface AXI4-Stream, il faut utiliser une DMA.
 
 # 2- Définition de la DMA
 
