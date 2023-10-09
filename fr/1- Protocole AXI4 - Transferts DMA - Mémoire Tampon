@@ -34,6 +34,7 @@ Pour la suite de ces explications, nous ne considérerons que la DMA au sens de 
 En particulier, la DMA dispose de 2 canaux distincts :
 
 - Le canal de lecture : **lecture des données depuis la RAM** et écriture dans le périphérique.
+
 - Le canal d'écriture : lecture des données depuis le périphérique et **ecriture dans la RAM**.
 
 On utilise l'IP (Intellectual Property) [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) fournit par Xilinx afin de transférer des données entre la PS (Processing System : CPU ARM) et la PL (Programable Logical : FPGA).
