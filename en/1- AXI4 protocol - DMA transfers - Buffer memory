@@ -1,6 +1,6 @@
 # 1- Definition of DMA
 
-Literally, a [Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access) (DMA) is a device that allows direct access between the RAM and a device (e.g. HDD, SSD), without the intervention of the processor, except to start and stop the transfer. 
+Literally, a DMA ([Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access)) is a device that allows direct access between the RAM and a device (e.g. HDD, SSD), without the intervention of the processor, except to start and stop the transfer. 
 This speeds up data transfer considerably.
 
 At Xilinx, we find DMAs with the same definition, but which allow more precisely to transfer data between an AXI4 Memory Map interface (which is therefore connected to the SODIMM RAM, or **PS RAM**) and an AXI4-Stream interface (which is therefore connected to an **external device**, such as a DAC or ADC).
@@ -22,7 +22,7 @@ More detailed explanations of its use for transfers between PS and DACs/ADCs wil
 
 The [Advanced eXtensible Interface 4](https://en.wikipedia.org/wiki/Advanced_eXtensible_Interface) (AXI4) is a parallel communication interface, mainly designed for on-chip communication.
 
-There are three types of AXI4 interfaces [UG761, page 4](https://docs.xilinx.com/v/u/en-US/ug761_axi_reference_guide) :
+There are three types of AXI4 interfaces ([UG761](https://docs.xilinx.com/v/u/en-US/ug761_axi_reference_guide)) :
 
 - **AXI4 Memory Map** : for Memory Mapped Memory Map interfaces. **It allows burst of up to 256 data transfer cycles with just a single address phase**. Useful for high-performance requirements. 
 
@@ -32,53 +32,50 @@ Useful for simple, low-throughput memory-mapped communication (for example, to a
 
 - **AXI4-Stream** : **removes the requirement for an address phase altogether and allows unlimited data burst size**.
 AXI4-Stream interfaces and transfers do not have address phases and are therefore not considered to be memory-mapped.
-Useful for high-speed streaming data (I like to talk about "real time transfer" to illustrate the difference with AXI4 Memory Map).
+Useful for high-speed streaming data (I like to talk about "real time transfer" to illustrate the difference with packet transfers like AXI4 Memory Map).
 
 In practice, for the AXI4 Memory Map and AXI4-Lite interfaces, it is necessary to read or write in the registers provided at right addresses.
 For the AXI4-Stream interface, it is necessary to use a DMA.
 
 # 3- Technical Characteristics of DMA
 
-![DMA](./images/DMA.png?raw=true "AXI DMA Controller Xilinx IP")
+![DMA](./../images/DMA.png?raw=true "AXI DMA Controller Xilinx IP")
 
 ## A- Maximum size of a transfert
 
 The maximum width of buffer length register is **2<sup>26</sup>-1 bytes**.
-This means that a DMA transfert cannot contain more than **64 MB - 1 (or 64 Mo - 1)** of data (this is a hardware limit of the Xilinx IP).
+This means that a DMA transfert cannot contain more than **64 MB - 1** of data (this is a hardware limit of the Xilinx IP).
 
-> More precisely : 2<sup>26</sup> bytes = 67 108 864 B = 64 MB (or 64 Mo)
+> More precisely : 2<sup>26</sup> bytes = 67 108 864 B = 64 MB
 
-It is important to know this because basically, we cannot make a DMA transfer of more than **64 MB - 1 (or 64 Mo - 1)**, in particular if we use the Pynq library.
+It is important to know this because basically, we cannot make a DMA transfer of more than **64 MB - 1**, in particular if we use the Pynq library.
 A method to bypass this limit is proposed in the following.
 
-Be careful, vivado is not very clear in the configuration, because it requires a number of bits.
-We can read in [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma/Width-of-Buffer-Length-Register) : "*The number of bytes is equal to **2<sup>Length Width</sup>** . So a Length Width of 26 gives a byte count of **67,108,863 bytes**.* "
+Be careful, vivado is not very clear in the configuration, because it requires a number of bits ([PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma)) : "*The number of bytes is equal to **2<sup>Length Width</sup>** . So a Length Width of 26 gives a byte count of **67,108,863 bytes**.* "
 
 ## B- Maximum speed of a transfert
 
 ### 1-AXI4 Memory Map side, usage of the PS RAM
 
 On the AXI4 Memory Map side, the speed is limited by the PS : the AXI4 HP0/1/2/3 data width is limited to **128 bits**.
-Considering that maximum clock frequency of the PS is **333 MHz**, the maximum transfert rate on the AXI4 Memory Map side is **5.20 GB/s (or 5.20 Go/s)**.
+Considering that maximum clock frequency of the PS is **333 MHz**, the maximum transfert rate on the AXI4 Memory Map side is **5.20 GB/s**.
 
-> More precisely : 128 bits * 333 MHz = 42 624 * 10<sup>6</sup> bps = 41.625 Gbps = 5.20 GB/s (or 5.20 Go/s)
+> More precisely : 128 bits * 333 MHz = 42 624 * 10<sup>6</sup> bps = 41.625 Gbps = 5.20 GB/s
 
-With a more conventional **300 MHz** clock, a transfer rate of **4.6875 GB/s (or 4.6875 Go/s)** is achieved.
+With a more conventional **300 MHz** clock, a transfer rate of **4.6875 GB/s** is achieved.
 
-> More precisely : 128 bits * 300 MHz = 38 400 * 10<sup>6</sup> bps = 37.5 Gbps = 4.6875 GB/s (or 4.6875 Go/s)
+> More precisely : 128 bits * 300 MHz = 38 400 * 10<sup>6</sup> bps = 37.5 Gbps = 4.6875 GB/s
 
-Moreover, HP1 and HP2 seem to share the same 128 bits AXI4 Memory Map interface  [UG1085, figure 1-1, page 29](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf), so the speed will not be maximal if they are both used at the same time.
+Moreover, HP1 and HP2 share the same 128 bits AXI4 Memory Map interface ([UG1085](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf)), so the speed will not be maximal if they are both used at the same time.
 
 #### Using Samples per seconds
 
 Later, we will use a DMA to send or receive data with the DACs and ADCs.
-In general, it is more convenient to speak in GSa/s (Samples per seconds, or GSPS in Xilinx nomenclature) instead of GB/S (or Go/s). 
+In general, it is more convenient to speak in GSa/s (Samples per seconds, or GSPS in Xilinx nomenclature) instead of GB/S. 
 
-As we will see, DACs and ADCs use data coded on 16 bits, so **1 sample = 16 bits = 2 Bytes (or 2 octets)**.
+As we will see, DACs and ADCs use data coded on 16 bits, so **1 sample = 16 bits = 2 Bytes**.
 
 The maximum transfer rate on this side is also **2.6 GSa/s** with a 333 MHz clock, or **2.34375 GSa/s** with a more regular 300 MHz clock.
-
-#### 
 
 It's preferable to use a 300 MHz clock, because as well as being more conventional, this is the frequency at which the PL RAM operates: this makes it easy to reuse the same design between the PS RAM and the PL RAM, thus increasing compatibility.
 If maximum performance is required, there's still a 33 MHz margin.
@@ -88,9 +85,9 @@ If maximum performance is required, there's still a 33 MHz margin.
 As we have seen above, it is also possible to use the 4 GB of DDR4 SDRAM (PL RAM).
 In this case, the data width is **512 bits**. 
 Moreover, the DDR4 SDRAM memory need a clock frequency of **300 MHz**.
-In this case, the maximum transfert rate on the AXI4 Memory Map side is **18.75 GB/s (or 18.75 Go/s)**. 
+In this case, the maximum transfert rate on the AXI4 Memory Map side is **18.75 GB/s**. 
 
-> More precisely : 512 bits * 300 MHz = 153 600 * 10<sup>6</sup> bps = 150 Gbps = 18.75 GB/s (or 18.75 Go/s)
+> More precisely : 512 bits * 300 MHz = 153 600 * 10<sup>6</sup> bps = 150 Gbps = 18.75 GB/s
 
 #### Using Samples per seconds
 
@@ -98,19 +95,20 @@ The maximum transfer rate on the AXI4 Memory Map side is also **9.375 GSa/s**.
 
 ### 3-AXI4-Stream side
 
-According to [PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma), the data width of the AXI4-Stream DMA interface can be 8, 16, 32, 64, 128, 256, 512 and 1024 bits.
+The data width of the AXI4-Stream DMA interface can be 8, 16, 32, 64, 128, 256, 512 and 1024 bits ([PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma)).
 It is the number of bits that will be sent or received by the DMA in 1 clock stroke, but it does not correspond to the total amount of data transferred by the DMA, which is 64 MB - 1 ( or 64 Mo - 1), as seen before.
 
-On the other side of the interface, the speed is limited by the IP used : generally, it is not possible to choose the parameters, except if you develop your own IP.
-This is what we will do next.
-In our example, we will use data width of 128, 256, 512 or 1024 bits depending on the case (ADCs or DACs) and the number of channels (1 or 2).
+On the other side of the interface, speed is defined by the IP used: generally, it is not possible to choose this parameter directly, as it depends on the operation of this IP.
+In our case, we'll be using data widths of 128, 256, 512 or 1024 bits, depending on the case (ADCs or DACs) and the number of channels (1 or 2).
 
-## C- Maximum amount of RAM
+## C- Maximum amount of memory
 
-According to [DS889, page 12](https://docs.xilinx.com/v/u/en-US/ds889-zynq-usp-rfsoc-overview) it is possible to upgrade the ZCU111 SODIMM RAM, in order to have up to **32 GB (or 32 Go) of memory in the PS, of which 28GB is actually usable**, which corresponds to **14 GSa**.
+[DS889](https://docs.xilinx.com/v/u/en-US/ds889-zynq-usp-rfsoc-overview)
+
+It is possible to upgrade the  SODIMM RAM, in order to have up to **32 GB of memory in the PS, of which 28GB is actually usable**, which corresponds to **14 GSa**.
 We will explain next how to process to RAM upgrade, and why we only have 28GB usable. 
 
-But unfortunately, it is not possible to increase the DDR4 SDRAM, because this memory is soldered, there is only **4 GB (or 4 Go) of memory in the PL**, which corresponds to **2 GSa**. 
+But unfortunately, it is not possible to increase the DDR4 SDRAM, because this memory is soldered, there is only **4 GB of memory in the PL**, which corresponds to **2 GSa**. 
 
 It is necessary to choose between speed and amount of memory : 
 
@@ -143,21 +141,21 @@ The [AXI Streaming FIFO](https://www.xilinx.com/products/intellectual-property/a
 
 According to [PG085](https://docs.xilinx.com/r/en-US/pg085-axi4stream-infrastructure) FIFO has a maximum memory depth of 32 768 (this is a hardware limit of the Xilinx IP). 
 
-- For an 128 bits AXI4-Stream data width, this corresponds to **512 KB (or 512 Ko)**.
+- For an 128 bits AXI4-Stream data width, this corresponds to **512 KB**.
 
-> More precisely : 32 768 * 128 bits = 4 194 304 bits = 4 Mb = **512 KB (or 512 Ko)**
+> More precisely : 32 768 * 128 bits = 4 194 304 bits = 4 Mb = **512 KB**
 
-- For an 256 bits AXI4-Stream data width, this corresponds to **1 MB (or 1 Mo)**.
+- For an 256 bits AXI4-Stream data width, this corresponds to **1 MB**.
 
-> More precisely : 32 768 * 256 bits = 8 388 608 bits = 8 Mb = **1 MB (or 1 Mo)**
+> More precisely : 32 768 * 256 bits = 8 388 608 bits = 8 Mb = **1 MB**
 
-- For an 512 bits AXI4-Stream data width, this corresponds to **2 MB (or 2 Mo)**.
+- For an 512 bits AXI4-Stream data width, this corresponds to **2 MB**.
 
-> More precisely : 32 768 * 512 bits = 16 777 216 bits = 16 Mb = **2 MB (or 2 Mo)**.
+> More precisely : 32 768 * 512 bits = 16 777 216 bits = 16 Mb = **2 MB**.
 
-- For an 256 bits AXI4-Stream data width, this corresponds to **4 MB (or 4 Mo)**.
+- For an 256 bits AXI4-Stream data width, this corresponds to **4 MB**.
 
-> More precisely : 32 768 * 1024 bits = 33 554 432 bits = 32 Mb = **4 MB (or 4 Mo)**
+> More precisely : 32 768 * 1024 bits = 33 554 432 bits = 32 Mb = **4 MB**
 
 ### 2-Independent Clock
 
