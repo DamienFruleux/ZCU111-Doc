@@ -4,7 +4,9 @@ The [Advanced eXtensible Interface 4](https://en.wikipedia.org/wiki/Advanced_eXt
 
 There are three types of AXI4 interfaces ([UG761](https://docs.xilinx.com/v/u/en-US/ug761_axi_reference_guide)) :
 
-- **AXI4 Memory Map** : for Memory Mapped Memory Map interfaces. **It allows burst of up to 256 data transfer cycles with just a single address phase**. Useful for high-performance requirements. 
+- **AXI4 Memory Map** : for Memory Mapped Memory Map interfaces.
+**It allows burst of up to 256 data transfer cycles with just a single address phase**.
+Useful for high-performance requirements. 
 
 - **AXI4-Lite** : light-weight, **single transaction memory mapped interface**.
 It has a small logic footprint and is a simple interface to work with both in design and usage.
