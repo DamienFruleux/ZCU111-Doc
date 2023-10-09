@@ -25,10 +25,11 @@ Littéralement, une DMA ([Direct Memory Access](https://en.wikipedia.org/wiki/Di
 Cela accélère donc considérablement les transferts de données.
 
 Dans la nomenclature de Xilinx, on retrouve des DMA avec la même définition, mais qui permettent plus précisément de transférer des données entre une interface AXI4 Memory Map, qui est connectée à la RAM SODIMM, ou **PS RAM**, et une interface AXI4-Stream, qui est connectée à un **périphérique externe**, tel qu'un DAC ou un ADC.
-Pour la suite de ces explications, nous ne considérerons que la DMA au sens de Xilinx.
 
 A noter qu'il est également possible d'utiliser une RAM externe, notamment les 4 Go de DDR4 SDRAM, ou **PL RAM**.
 Cette mémoire vive utilise également une interface AXI4 Memory Map.
+
+Pour la suite de ces explications, nous ne considérerons que la DMA au sens de Xilinx.
 
 En particulier, la DMA dispose de 2 canaux distincts :
 
