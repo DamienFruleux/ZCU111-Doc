@@ -1,24 +1,4 @@
-# 1- Definition of DMA
-
-Literally, a DMA ([Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access)) is a device that allows direct access between the RAM and a device (e.g. HDD, SSD), without the intervention of the processor, except to start and stop the transfer. 
-This speeds up data transfer considerably.
-
-At Xilinx, we find DMAs with the same definition, but which allow more precisely to transfer data between an AXI4 Memory Map interface (which is therefore connected to the SODIMM RAM, or **PS RAM**) and an AXI4-Stream interface (which is therefore connected to an **external device**, such as a DAC or ADC).
-For the rest of these explanations, we'll consider only the Xilinx DMA.
-
-Note that it is also possible to use a external RAM, in particular the 4 GB of DDR4 SDRAM, or **PL RAM**.
-It also uses an AXI4 Memory Map interface.
-
-In particular, the DMA has 2 separate channels: 
-
-- Read Channel : **read data from RAM** and write it to the device.
-
-- Write Channel : read data from the device and **write it to the RAM**.
-
-Finally, the [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) Xilinx IP (Intellectual Property) allows you to transfer data between the PS (Processing System : ARM processors) and the PL (Programable Logical : FPGA).
-More detailed explanations of its use for transfers between PS and DACs/ADCs will be given later.
-
-# 2- AXI4 Protocol
+# 1- AXI4 Protocol
 
 The [Advanced eXtensible Interface 4](https://en.wikipedia.org/wiki/Advanced_eXtensible_Interface) (AXI4) is a parallel communication interface, mainly designed for on-chip communication.
 
@@ -36,6 +16,25 @@ Useful for high-speed streaming data (I like to talk about "real time transfer" 
 
 In practice, for the AXI4 Memory Map and AXI4-Lite interfaces, it is necessary to read or write in the registers provided at right addresses.
 For the AXI4-Stream interface, it is necessary to use a DMA.
+
+# 2- Definition of DMA
+
+Literally, a DMA ([Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access)) is a device that allows direct access between the RAM and a device (e.g. HDD, SSD), without the intervention of the processor, except to start and stop the transfer. 
+This speeds up data transfer considerably.
+
+At Xilinx, we find DMAs with the same definition, but which allow more precisely to transfer data between an AXI4 Memory Map interface (which is therefore connected to the SODIMM RAM, or **PS RAM**) and an AXI4-Stream interface (which is therefore connected to an **external device**, such as a DAC or ADC).
+For the rest of these explanations, we'll consider only the Xilinx DMA.
+
+Note that it is also possible to use a external RAM, in particular the 4 GB of DDR4 SDRAM, or **PL RAM**.
+It also uses an AXI4 Memory Map interface.
+
+In particular, the DMA has 2 separate channels: 
+
+- Read Channel : **read data from RAM** and write it to the device.
+
+- Write Channel : read data from the device and **write it to the RAM**.
+
+The IP (Intellectual Property) [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) supplied by Xilinx is used to transfer data between the PS (Processing System: ARM CPU) and the PL (Programable Logical: FPGA).
 
 # 3- Technical Characteristics of DMA
 
@@ -103,16 +102,18 @@ In our case, we'll be using data widths of 128, 256, 512 or 1024 bits, depending
 
 ## C- Maximum amount of memory
 
-[DS889](https://docs.xilinx.com/v/u/en-US/ds889-zynq-usp-rfsoc-overview)
+The ZCU111 has 2 different RAMs: PS RAM and PL RAM.
 
-It is possible to upgrade the  SODIMM RAM, in order to have up to **32 GB of memory in the PS, of which 28GB is actually usable**, which corresponds to **14 GSa**.
-We will explain next how to process to RAM upgrade, and why we only have 28GB usable. 
+It is possible to change the SODIMM RAM strip (([DS889](https://docs.xilinx.com/v/u/en-US/ds889-zynq-usp-rfsoc-overview))), in order to upgrade from 4 GB (default) to **32 GB of memory in the PS**.
+In theory, this corresponds to 2 GSa and 16 GSa respectively, but bear in mind that the GNU/Linux kernel also uses this memory!
+The amount of memory that can actually be used is therefore not perfectly defined.
+Finally, you can't manage this memory as you wish: you have to allocate memory.
 
-But unfortunately, it is not possible to increase the DDR4 SDRAM, because this memory is soldered, there is only **4 GB of memory in the PL**, which corresponds to **2 GSa**. 
+Unfortunately, it's not possible to increase DDR4 SDRAM, as these memory chips are soldered.
+The PL has **4 GB of memory**.
+What's more, this memory is not used at all by the kernel, so we have 2 GSa available that we can use and manage as we see fit.
 
-It is necessary to choose between speed and amount of memory : 
-
-*28 GB @ 5.20 GB/s vs 4 GB @ 18.75 GB/s* !
+So there's a trade-off between speed and memory: **~ 32 GB @ 5.20 GB/s or 4 GB @ 18.75 GB/s !**
 
 ## D- Conclusion
 
