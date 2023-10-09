@@ -113,7 +113,7 @@ La quantitée de mémoire réellement utilisable n'est ainsi pas parfaitement d�
 Enfin, on ne peut pas gérer cette mémoire comme on le souhaite : il faut faire des allocations de mémoire.
 
 Malheureusement, il n'est pas possible d'augmenter la DDR4 SDRAM, car ces puces mémoire sont soudées.
-On dispose de **4 Go de mémoire dans la PL.**
+On dispose de **4 Go de mémoire dans la PL**.
 De plus, celle-ci n'est pas du tout utilisée par le noyau, on à ainsi 2 GSa disponnible que l'on peut utiliser et gérer à notre convenance.
 
 On a donc un compromis à faire entre la vitesse et la quantité de mémoire : **~ 32 Go @ 5.20 Go/s ou 4 Go @ 18.75 Go/s !**
