@@ -25,10 +25,11 @@ Literally, a DMA ([Direct Memory Access](https://en.wikipedia.org/wiki/Direct_me
 This speeds up data transfer considerably.
 
 At Xilinx, we find DMAs with the same definition, but which allow more precisely to transfer data between an AXI4 Memory Map interface (which is therefore connected to the SODIMM RAM, or **PS RAM**) and an AXI4-Stream interface (which is therefore connected to an **external device**, such as a DAC or ADC).
-For the rest of these explanations, we'll consider only the Xilinx DMA.
 
 Note that it is also possible to use a external RAM, in particular the 4 GB of DDR4 SDRAM, or **PL RAM**.
 It also uses an AXI4 Memory Map interface.
+
+For the rest of these explanations, we'll consider only the Xilinx DMA.
 
 In particular, the DMA has 2 separate channels: 
 
