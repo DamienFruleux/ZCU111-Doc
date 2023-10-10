@@ -1,7 +1,7 @@
 ![AWG](./../images/AWG.png?raw=true "Architecture de l'AWG")
 ![DGTZ](./../images/DGTZ.png?raw=true "Architecture du DGTZ")
 
-# 1- Le protocole AXI4
+# Le protocole AXI4
 
 L' AXI4 ([Advanced eXtensible Interface 4](https://en.wikipedia.org/wiki/Advanced_eXtensible_Interface)) est une interface de communication parallèle, principalement conçue pour la communication sur puce.
 
@@ -22,7 +22,7 @@ Utile pour les flux de données à grande vitesse (j'aime parler de "transfert t
 En pratique, pour les interfaces AXI4 Memory Map et AXI4-Lite, il est nécessaire de lire ou d'écrire dans les registres de configuration aux bonnes adresses.
 Pour exploiter l'interface AXI4-Stream, il faut utiliser une DMA.
 
-# 2- Définition de la DMA
+# Définition de la DMA
 
 Une DMA ([Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access)) est un dispositif qui permet un accès direct entre la RAM et un périphérique (comme un HDD, un SSD...), sans l'intervention du processeur, sauf pour démarrer et arrêter le transfert.
 Cela accélère donc considérablement les transferts de données.
@@ -45,13 +45,13 @@ On utilise l'IP (Intellectual Property) [AXI DMA Controller](https://www.xilinx.
 ![AWG_DMA](./../images/AWG_DMA.png?raw=true "Disposition de la DMA dans l'architecture de l'AWG")
 ![DGTZ_DMA](./../images/DGTZ_DMA.png?raw=true "Disposition de la DMA dans l'architecture du DGTZ")
 
-# 3- Caractéristiques techniques de la DMA
+# Caractéristiques techniques de la DMA
 
 On retrouve les principales caractéristiques techniques de l'IP [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) fournit par Xilinx.
 
 ![DMA](./../images/DMA.png?raw=true "IP Xilinx AXI DMA Controller")
 
-## A- Taille maximale d'un transfert
+## Taille maximale d'un transfert
 
 La largeur maximale du registre de longueur de la mémoire tampon est de **2<sup>26</sup>-1 octets**.
 Cela signifie qu'un transfert DMA ne peut pas contenir plus de **64 Mo - 1** de données (il s'agit d'une limite matérielle de l'IP de Xilinx).
@@ -63,11 +63,11 @@ Une méthode pour contourner cette limite est proposée par la suite.
 
 Attention, vivado n'est pas très clair dans la configuration, car elle nécessite un nombre de bits ([PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma)) : "*The number of bytes is equal to **2<sup>Length Width</sup>** . So a Length Width of 26 gives a byte count of **67,108,863 bytes**.* "
 
-## B- Débit maximale d'un transfert
+## Débit maximale d'un transfert
 
 Le débit d'un transfert dépend des différents paramètres de l'interface considérée : en particulier la PS RAM et la PL RAM ont des caractéristiques différentes.
 
-### 1-Côté AXI4 Memory Map, utilisation de la PS RAM
+### Côté AXI4 Memory Map, utilisation de la PS RAM
 
 Du côté AXI4 Memory Map, le débit est limitée par la PS : la largeur des bus de données AXI4 HP0/1/2/3 est limitée à **128 bits**.
 Sachant que la fréquence d'horloge maximale de la PS est de **333 MHz**, le taux de transfert maximal du côté AXI4 Memory Map est de **5,20 Go/s**.
@@ -92,7 +92,7 @@ Le taux de transfert maximal de ce côté est donc également de **2,6 GSa/s** a
 Il est préférable d'utiliser une horloge de 300 MHz, car en plus d'être plus classique, c'est à cette fréquence que fonctionne la PL RAM : cela permet de réutiliser facilement le même design entre la PS RAM et la PL RAM et donc augmenter la compatibilité.
 Dans le cas ou l'on souhaite les performances maximales, il reste 33MHz de marge.
 
-### 2-Côté AXI4 Memory Map, utilisation de la PL RAM
+### Côté AXI4 Memory Map, utilisation de la PL RAM
 
 Comme nous l'avons vu plus haut, il est également possible d'utiliser les 4 Go de DDR4 SDRAM (PL RAM).
 Dans ce cas, la largeur du bus de données est de **512 bits**.
@@ -105,7 +105,7 @@ Dans ce cas, le taux de transfert maximal du côté AXI4 Memory Map est de **18,
 
 Le taux de transfert maximal du côté AXI4 Memory Map est également de **9,375 GSa/s**.
 
-### 3-Côté AXI4-Stream
+### Côté AXI4-Stream
 
 La largeur des données de l'interface AXI4-Stream de la DMA peut être de 8, 16, 32, 64, 128, 256, 512 et 1024 bits ([PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma))
 Il s'agit du nombre de bits qui seront envoyés ou reçus par la DMA en 1 coup d'horloge, mais cela ne correspond pas à la quantité totale de données transférées par la DMA, qui est de 64 Mo-1, comme nous l'avons vu précédemment.
@@ -113,7 +113,7 @@ Il s'agit du nombre de bits qui seront envoyés ou reçus par la DMA en 1 coup d
 De l'autre côté de l'interface, le débit est définie par l'IP utilisée : généralement, il n'est pas possible de choisir directement ce paramètre puisqu'il dépends du fonctionnement de cette IP.
 Dans notre cas, les DACs fonctionnent avec une largeur de données de 256 bits, tandis que les ADCs fonctionnent avec une largeur de données de 128 bits.
 
-## C- Quantité maximale de mémoire
+## Quantité maximale de mémoire
 
 La ZCU111 dispose de 2 RAMs différentes : la PS RAM et la PL RAM.
 
