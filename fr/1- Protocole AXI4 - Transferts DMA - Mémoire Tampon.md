@@ -1,6 +1,6 @@
 # 1- Le protocole AXI4
 
-Le protocole AXI4 [Advanced eXtensible Interface 4](https://en.wikipedia.org/wiki/Advanced_eXtensible_Interface) est une interface de communication parallèle, principalement conçue pour la communication sur puce.
+L' AXI4 ([Advanced eXtensible Interface 4](https://en.wikipedia.org/wiki/Advanced_eXtensible_Interface)) est une interface de communication parallèle, principalement conçue pour la communication sur puce.
 
 Il existe trois types d'interfaces AXI4 ([UG761](https://docs.xilinx.com/v/u/en-US/ug761_axi_reference_guide)) :
 
