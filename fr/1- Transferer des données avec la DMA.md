@@ -47,7 +47,7 @@ On utilise l'IP (Intellectual Property) [AXI DMA Controller](https://www.xilinx.
 
 # 3- Caractéristiques techniques de la DMA
 
-On retrouve les principales caractéristiques techniques de l'IP (Intellectual Property) [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) fournit par Xilinx.
+On retrouve les principales caractéristiques techniques de l'IP [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) fournit par Xilinx.
 
 ![DMA](./../images/DMA.png?raw=true "IP Xilinx AXI DMA Controller")
 
