@@ -117,7 +117,7 @@ Dans notre cas, les DACs fonctionnent avec une largeur de données de 256 bits, 
 
 La ZCU111 dispose de 2 RAMs différentes : la PS RAM et la PL RAM.
 
-Il est possible de changer la barrette de RAM SODIMM (([DS889](https://docs.xilinx.com/v/u/en-US/ds889-zynq-usp-rfsoc-overview))), afin de passer de 4 Go (par défaut) à **32 Go de mémoire dans la PS**.
+Il est possible de changer la barrette de RAM SODIMM ([DS889](https://docs.xilinx.com/v/u/en-US/ds889-zynq-usp-rfsoc-overview)), afin de passer de 4 Go (par défaut) à **32 Go de mémoire dans la PS**.
 En théorie cela correspond à respectivement 2 GSa et 16 GSa, mais il faut garder en tête que le noyau GNU/Linux utilise aussi cette mémoire !
 La quantitée de mémoire réellement utilisable n'est ainsi pas parfaitement définie.
 Enfin, on ne peut pas gérer cette mémoire comme on le souhaite : il faut faire des allocations de mémoire.
