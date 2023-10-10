@@ -107,7 +107,7 @@ Le taux de transfert maximal du côté AXI4 Memory Map est également de **9,375
 
 ### Côté AXI4-Stream
 
-La largeur des données de l'interface AXI4-Stream de la DMA peut être de 8, 16, 32, 64, 128, 256, 512 et 1024 bits ([PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma))
+La largeur des données de l'interface AXI4-Stream de la DMA peut être de 8, 16, 32, 64, 128, 256, 512 et 1024 bits ([PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma)).
 Il s'agit du nombre de bits qui seront envoyés ou reçus par la DMA en 1 coup d'horloge, mais cela ne correspond pas à la quantité totale de données transférées par la DMA, qui est de 64 Mo - 1, comme nous l'avons vu précédemment.
 
 De l'autre côté de l'interface, le débit est définie par l'IP utilisée : généralement, il n'est pas possible de choisir directement ce paramètre puisqu'il dépends du fonctionnement de cette IP.
