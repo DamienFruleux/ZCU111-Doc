@@ -1,6 +1,6 @@
 # 1- AXI4 Protocol
 
-The [Advanced eXtensible Interface 4](https://en.wikipedia.org/wiki/Advanced_eXtensible_Interface) (AXI4) is a parallel communication interface, mainly designed for on-chip communication.
+The AXI4 ([Advanced eXtensible Interface 4](https://en.wikipedia.org/wiki/Advanced_eXtensible_Interface)) is a parallel communication interface, mainly designed for on-chip communication.
 
 There are three types of AXI4 interfaces ([UG761](https://docs.xilinx.com/v/u/en-US/ug761_axi_reference_guide)) :
 
