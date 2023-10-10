@@ -42,8 +42,8 @@ In particular, the DMA has 2 separate channels:
 
 The IP (Intellectual Property) [AXI DMA Controller](https://www.xilinx.com/products/intellectual-property/axi_dma.html) supplied by Xilinx is used to transfer data between the PS (Processing System: ARM CPU) and the PL (Programable Logical: FPGA).
 
-![AWG_DMA](./../images/AWG_DMA.png?raw=true "DMA positioning in the AWG architecture")
-![DGTZ_DMA](./../images/DGTZ_DMA.png?raw=true "DMA positioning in the DGTZ architecture")
+![AWG_DMA](./../images/AWG_dma.png?raw=true "DMA positioning in the AWG architecture")
+![DGTZ_DMA](./../images/DGTZ_dma.png?raw=true "DMA positioning in the DGTZ architecture")
 
 # Technical Characteristics of DMA
 
