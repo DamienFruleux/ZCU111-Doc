@@ -35,7 +35,7 @@ Pour une largeur de données AXI4-Stream de 128 bits (qu'utilisent les ADCs), ce
 > Plus précisément : 32 768 * 128 bits = 4 194 304 bits = 4 Mb = 512 Ko
 
 On remarque que le protocole AXI4-Stream propose des bits supplémentaires afin d'assurer le bon déroulé du transfert.
-En particulier, on retrouve un signal TLAST, qui sera détaillé par la suite.
+En particulier, on retrouve un signal _TLAST_, qui sera détaillé par la suite.
 Quand on parle de débit, on évoque seulement les bits de données utiles.
 
 
