@@ -78,7 +78,7 @@ Avec une horloge plus classique de **300 MHz**, on atteint un taux de transfert 
 
 > Plus précisément : 128 bits * 300 MHz = 38 400 * 10<sup>6</sup> bps = 37.5 Gbps = 4.6875 Go/s
 
-De plus, HP1 et HP2 partagent la même interface AXI4 Memory Map 128 bits ([UG1085, figure 1-1, page 29](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf)) de sorte que le débit ne sera pas maximale s'ils sont utilisés en même temps.
+De plus, HP1 et HP2 partagent la même interface AXI4 Memory Map 128 bits ([UG1085](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf)) de sorte que le débit ne sera pas maximale s'ils sont utilisés en même temps.
 
 #### En utilisant des "Samples per seconds"
 
@@ -108,10 +108,10 @@ Le taux de transfert maximal du côté AXI4 Memory Map est également de **9,375
 ### Côté AXI4-Stream
 
 La largeur des données de l'interface AXI4-Stream de la DMA peut être de 8, 16, 32, 64, 128, 256, 512 et 1024 bits ([PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma))
-Il s'agit du nombre de bits qui seront envoyés ou reçus par la DMA en 1 coup d'horloge, mais cela ne correspond pas à la quantité totale de données transférées par la DMA, qui est de 64 Mo-1, comme nous l'avons vu précédemment.
+Il s'agit du nombre de bits qui seront envoyés ou reçus par la DMA en 1 coup d'horloge, mais cela ne correspond pas à la quantité totale de données transférées par la DMA, qui est de 64 Mo - 1, comme nous l'avons vu précédemment.
 
 De l'autre côté de l'interface, le débit est définie par l'IP utilisée : généralement, il n'est pas possible de choisir directement ce paramètre puisqu'il dépends du fonctionnement de cette IP.
-Dans notre cas, les DACs fonctionnent avec une largeur de données de 256 bits, tandis que les ADCs fonctionnent avec une largeur de données de 128 bits.
+Dans notre cas, les DACs fonctionnent avec une largeur de données de 256 bits (16 échantillons de 16 bits), tandis que les ADCs fonctionnent avec une largeur de données de 128 bits (8 échantillons de 16 bits).
 
 ## Quantité maximale de mémoire
 
