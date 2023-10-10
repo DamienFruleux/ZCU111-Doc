@@ -13,8 +13,8 @@ This FIFO acts as a reservoir, allowing us to "synchronize" 2 interfaces with di
 
 The IP [AXI Streaming FIFO](https://www.xilinx.com/products/intellectual-property/axi_fifo.html) supplied by Xilinx is used to synchronize transfers between the DMA and the external device (DAC or ADC).
 
-![AWG_FIFO](./../images/AWG_FIFO.png?raw=true "Disposition de la FIFO dans l'architecture de l'AWG")
-![DGTZ_FIFO](./../images/DGTZ_FIFO.png?raw=true "Disposition de la FIFO dans l'architecture du DGTZ")
+![AWG_FIFO](./../images/AWG_fifo.png?raw=true "FIFO positioning in the AWG architecture")
+![DGTZ_FIFO](./../images/DGTZ_fifo.png?raw=true "FIFO positioning in the DGTZ architecture")
 
 # Technical Characteristics of FIFO
 
