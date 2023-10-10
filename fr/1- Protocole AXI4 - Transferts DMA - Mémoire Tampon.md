@@ -21,7 +21,7 @@ Pour exploiter l'interface AXI4-Stream, il faut utiliser une DMA.
 
 # 2- Définition de la DMA
 
-Littéralement, une DMA ([Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access)) est un dispositif qui permet un accès direct entre la RAM et un périphérique (comme un HDD, un SSD...), sans l'intervention du processeur, sauf pour démarrer et arrêter le transfert.
+Une DMA ([Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access)) est un dispositif qui permet un accès direct entre la RAM et un périphérique (comme un HDD, un SSD...), sans l'intervention du processeur, sauf pour démarrer et arrêter le transfert.
 Cela accélère donc considérablement les transferts de données.
 
 Dans la nomenclature de Xilinx, on retrouve des DMA avec la même définition, mais qui permettent plus précisément de transférer des données entre une interface AXI4 Memory Map, qui est connectée à la RAM SODIMM, ou **PS RAM**, et une interface AXI4-Stream, qui est connectée à un **périphérique externe**, tel qu'un DAC ou un ADC.
@@ -50,16 +50,19 @@ Cela signifie qu'un transfert DMA ne peut pas contenir plus de **64 Mo - 1** de 
 
 > Plus précisément : 2<sup>26</sup> bytes = 67 108 864 octets = 64 Mo
 
-Il est important de le savoir car en principe, on ne peut pas faire un transfert DMA de plus de **64 Mo - 1**, en particulier si on utilise la librairie Pynq.
+Il est important de le savoir car en principe, on ne peut pas faire un transfert DMA de plus de 64 Mo - 1, en particulier si on utilise la librairie Pynq.
 Une méthode pour contourner cette limite est proposée par la suite.
 
 Attention, vivado n'est pas très clair dans la configuration, car elle nécessite un nombre de bits ([PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma)) : "*The number of bytes is equal to **2<sup>Length Width</sup>** . So a Length Width of 26 gives a byte count of **67,108,863 bytes**.* "
 
-## B- Vitesse maximale d'un transfert
+## B- Débit maximale d'un transfert
+
+Le débit d'un transfert dépend des différents paramètres de l'interface considérée.
+En particulier, il est possible d'utiliser 2 mémoires différentes qui n'ont pas les mêmes caractéristiques.
 
 ### 1-Côté AXI4 Memory Map, utilisation de la PS RAM
 
-Du côté AXI4 Memory Map, la vitesse est limitée par la PS : la largeur des bus de données AXI4 HP0/1/2/3 est limitée à **128 bits**.
+Du côté AXI4 Memory Map, le débit est limitée par la PS : la largeur des bus de données AXI4 HP0/1/2/3 est limitée à **128 bits**.
 Sachant que la fréquence d'horloge maximale de la PS est de **333 MHz**, le taux de transfert maximal du côté AXI4 Memory Map est de **5,20 Go/s**.
 
 > Plus précisément : 128 bits * 333 MHz = 42 624 * 10<sup>6</sup> bps = 41.625 Gbps = 5.20 Go/s
@@ -68,7 +71,7 @@ Avec une horloge plus classique de **300 MHz**, on atteint un taux de transfert 
 
 > Plus précisément : 128 bits * 300 MHz = 38 400 * 10<sup>6</sup> bps = 37.5 Gbps = 4.6875 Go/s
 
-De plus, HP1 et HP2 partagent la même interface AXI4 Memory Map 128 bits ([UG1085, figure 1-1, page 29](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf)) de sorte que la vitesse ne sera pas maximale s'ils sont utilisés en même temps.
+De plus, HP1 et HP2 partagent la même interface AXI4 Memory Map 128 bits ([UG1085, figure 1-1, page 29](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf)) de sorte que le débit ne sera pas maximale s'ils sont utilisés en même temps.
 
 #### En utilisant des "Samples per seconds"
 
@@ -89,7 +92,7 @@ Dans ce cas, la largeur du bus de données est de **512 bits**.
 De plus, la mémoire DDR4 SDRAM nécessite une fréquence d'horloge de **300 MHz**.
 Dans ce cas, le taux de transfert maximal du côté AXI4 Memory Map est de **18,75 Go/s**.
 							
-> Plus précisément : 512 bits * 300 MHz = 153 600 * 10<sup>6</sup> bps = 150 Gbps = 18.75 GB/s (or 18.75 Go/s)
+> Plus précisément : 512 bits * 300 MHz = 153 600 * 10<sup>6</sup> bps = 150 Gbps = 18.75 Go/s
 
 #### En utilisant des "Samples per seconds"
 
@@ -100,8 +103,8 @@ Le taux de transfert maximal du côté AXI4 Memory Map est également de **9,375
 La largeur des données de l'interface AXI4-Stream de la DMA peut être de 8, 16, 32, 64, 128, 256, 512 et 1024 bits ([PG021](https://docs.xilinx.com/r/en-US/pg021_axi_dma))
 Il s'agit du nombre de bits qui seront envoyés ou reçus par la DMA en 1 coup d'horloge, mais cela ne correspond pas à la quantité totale de données transférées par la DMA, qui est de 64 Mo-1, comme nous l'avons vu précédemment.
 
-De l'autre côté de l'interface, la vitesse est définie par l'IP utilisée : généralement, il n'est pas possible de choisir directement ce paramètre puisqu'il dépends du fonctionnement de cette IP.
-Dans notre cas, nous utiliserons des largeurs de données de 128, 256, 512 ou 1024 bits selon le cas (ADCs ou DACs) et le nombre de canaux (1 ou 2) .
+De l'autre côté de l'interface, le débit est définie par l'IP utilisée : généralement, il n'est pas possible de choisir directement ce paramètre puisqu'il dépends du fonctionnement de cette IP.
+Dans notre cas, les DACs fonctionnent avec une largeur de données de 256 bits, tandis que les ADCs fonctionnent avec une largeur de données de 128 bits.
 
 ## C- Quantité maximale de mémoire
 
@@ -116,50 +119,49 @@ Malheureusement, il n'est pas possible d'augmenter la DDR4 SDRAM, car ces puces 
 On dispose de **4 Go de mémoire dans la PL**.
 De plus, celle-ci n'est pas du tout utilisée par le noyau, on à ainsi 2 GSa disponnible que l'on peut utiliser et gérer à notre convenance.
 
-On a donc un compromis à faire entre la vitesse et la quantité de mémoire : **~ 32 Go @ 5.20 Go/s ou 4 Go @ 18.75 Go/s !**
+On a donc un compromis à faire entre le débit et la quantité de mémoire : **~ 32 Go @ 5.20 Go/s ou 4 Go @ 18.75 Go/s !**
 
-## D- Conclusion
+# Mémoire tampon
 
 Comme nous venons de le voir, la partie en amont de la DMA utilise le protocole AXI4 Memory Map, qui est un protocole qui fonctionne par paquets, alors que la partie en aval utilise le protocole AXI4-Stream, qui est un protocole qui fonctionne par flux de données.
-Les 2 protocoles sont différents et c'est donc la DMA qui fait l'interface.
+Les 2 protocoles sont différents et c'est donc la DMA qui fait la liaison.
 
-# 4- Use a FIFO
+Il est néanmoins nécessaire d'utiliser une petite mémoire tampon afin de stocker temporairement les données.
 
-## A- Utility
+Une FIFO ([First In, First Out](https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics))) est une méthode d'organisation de la gestion d'une mémoire tampon, où l'entrée la plus ancienne est la première traitée.
 
-In order to adapt the frequency, we will use a FIFO with 2 independent clocks which will allow us to play the role of buffer.
-The FIFO is filled at a frequency, and emptied at an other frequency.
-The FIFO makes the link between the 2 frequencies by temporarily storing the data : it allow to "synchronize" the data between 2 interfaces having different clocks.
+On utilise une FIFO avec 2 horloges indépendantes qui nous permet de jouer le rôle de mémoire tampon : elle est remplie à une fréquence, puis vidée à une autre.
 
-## B- Definition of a FIFO
+Cette FIFO joue donc le rôle de réservoir permettant de "synchroniser" 2 interfaces ayant des horloges différentes.
 
-A [FIFO](https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)) (first in, first out : the first in is the first out) is a method for organising the manipulation of a data buffer, where the oldest (first) entry, is processed first. 
+On utilise pour cela l'IP [AXI Streaming FIFO](https://www.xilinx.com/products/intellectual-property/axi_fifo.html) fournit par Xilinx.
 
-The [AXI Streaming FIFO](https://www.xilinx.com/products/intellectual-property/axi_fifo.html) Xilinx IP which will be use.
+# Caractéristiques techniques de la FIFO
 
-## C- Technical Characteristics of FIFO
+![FIFO](./../images/FIFO.png?raw=true "AXI Streaming FIFO Xilinx IP")
 
-![FIFO](./images/FIFO.png?raw=true "AXI Streaming FIFO Xilinx IP")
+## 1-FIFO Size
 
-### 1-FIFO Size
+La FIFO a une profondeur mémoire maximale de 32 768 (il s'agit d'une limite matérielle de l'IP de Xilinx) ([PG085](https://docs.xilinx.com/r/en-US/pg085-axi4stream-infrastructure)).
 
-According to [PG085](https://docs.xilinx.com/r/en-US/pg085-axi4stream-infrastructure) FIFO has a maximum memory depth of 32 768 (this is a hardware limit of the Xilinx IP). 
+Pour une largeur de données AXI4-Stream de 256 bits (qu'utilisent les DACs), cela correspond à **1 Mo de données, soit 512 KSa**.
 
-- For an 128 bits AXI4-Stream data width, this corresponds to **512 KB (or 512 Ko)**.
+> Plus précisément : 32 768 * 256 bits = 8 388 608 bits = 8 Mb = 1 Mo
 
-> Plus précisément : 32 768 * 128 bits = 4 194 304 bits = 4 Mb = **512 KB (or 512 Ko)**
+Pour une largeur de données AXI4-Stream de 128 bits (qu'utilisent les ADCs), cela correspond à **512 Ko de données, soit 256 KSa**.
 
-- For an 256 bits AXI4-Stream data width, this corresponds to **1 MB (or 1 Mo)**.
+> Plus précisément : 32 768 * 128 bits = 4 194 304 bits = 4 Mb = 512 Ko
 
-> Plus précisément : 32 768 * 256 bits = 8 388 608 bits = 8 Mb = **1 MB (or 1 Mo)**
+On remarque que le protocole AXI4-Stream propose des bits supplémentaires afin d'assurer le bon déroulé du transfert.
+En particulier, on retrouve un signal TLAST, qui sera détaillé par la suite.
+Quand on parle de débit, on évoque seulement les bits de données utiles.
 
-- For an 512 bits AXI4-Stream data width, this corresponds to **2 MB (or 2 Mo)**.
 
-> Plus précisément : 32 768 * 512 bits = 16 777 216 bits = 16 Mb = **2 MB (or 2 Mo)**.
 
-- For an 256 bits AXI4-Stream data width, this corresponds to **4 MB (or 4 Mo)**.
 
-> Plus précisément : 32 768 * 1024 bits = 33 554 432 bits = 32 Mb = **4 MB (or 4 Mo)**
+
+
+
 
 ### 2-Independent Clock
 
