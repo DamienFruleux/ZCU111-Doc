@@ -22,7 +22,7 @@ On retrouve les principales caractéristiques techniques de l'IP [AXI Streaming 
 
 ![FIFO](./../images/FIFO.png?raw=true "IP Xilinx AXI Streaming FIFO")
 
-## 1-FIFO Size
+## Taille de la FIFO
 
 La FIFO a une profondeur mémoire maximale de 32 768 (il s'agit d'une limite matérielle de l'IP de Xilinx) ([PG085](https://docs.xilinx.com/r/en-US/pg085-axi4stream-infrastructure)).
 
@@ -45,12 +45,12 @@ Quand on parle de débit, on évoque seulement les bits de données utiles.
 
 
 
-### 2-Independent Clock
+### Independent Clock
 
 Be sure to choose this option to be able to read and write in the FIFO with 2 different frequencies.
 
 
-### 3-Continuous transfert
+### Continuous transfert
 
 Thanks to this FIFO, which acts as a buffer, we also have the possibility of making continuous transfers. 
 
