@@ -78,7 +78,7 @@ Avec une horloge plus classique de **300 MHz**, on atteint un taux de transfert 
 
 > Plus précisément : 128 bits * 300 MHz = 38 400 * 10<sup>6</sup> bps = 37.5 Gbps = 4.6875 Go/s
 
-De plus, HP1 et HP2 partagent la même interface AXI4 Memory Map 128 bits ([UG1085](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf)) de sorte que le débit ne sera pas maximale s'ils sont utilisés en même temps.
+De plus, HP1 et HP2 partagent la même interface AXI4 Memory Map 128 bits ([UG1085](https://docs.xilinx.com/r/en-US/ug1085-zynq-ultrascale-trm/Zynq-UltraScale-Device-Technical-Reference-Manual)) de sorte que le débit ne sera pas maximale s'ils sont utilisés en même temps.
 
 #### En utilisant des "Samples per seconds"
 
