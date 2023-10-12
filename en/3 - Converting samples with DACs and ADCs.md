@@ -1,46 +1,61 @@
-# AXI4-Stream Protocol
+# AXI4-Stream protocol
 
-![AXI4-Stream](./images/AXI4-Stream.png?raw=true "AXI4-Stream Schema")
+The [AXI4-Stream] protocol (https://wiki.electroniciens.cnrs.fr/index.php/FPGA_CPLD_:_Guides_:_AXI4-Stream) is a "handshake" protocol that uses between 2 and 9 signals to communicate, although 3 to 4 signals are generally sufficient and necessary.
+It is a master-slave protocol: the master sends data and the slave receives it.
 
-The [AXI4-Stream](https://wiki.electroniciens.cnrs.fr/index.php/FPGA_CPLD_:_Guides_:_AXI4-Stream) protocol is a handshake protocol that uses between 2 and 9 signals to communicate, although generally 3 to 4 are sufficient and necessary. It is a "master-slave" protocol: the master sends the data and the slave receives it. 
+![AXI4-Stream](./../images/AXI4-Stream.png?raw=true "AXI4-Stream Schema")
 
-The following two signals are mandatory: 
+We have the following 4 common signals:
 
-- *TDATA* : data vector 
-- *TVALID* : indicates that a data is present and valid for the slave
+- *TDATA*: data vector
+- *TVALID*: indicates that data is present and valid for the slave
+- *TREADY*: presented by the slave to indicate that it is ready to receive data
+- *TLAST*: indicates the end of a frame, useful when frames are of variable size
 
-In most cases, an additional signal will be used: 
+The *TDATA* and *TVALID* signals are mandatory to complete an AXI4-Stream transaction.
+It is possible to dispense with the *TREADY* signal, in which case transmission is considered to have taken place without confirmation from the slave.
+A frame is defined as all the data sent by the master to the slave, in a single iteration.
+Finally, the *TLAST* signal is also used to send multiple frames in a single transfer.
 
-- *TREADY* : presented by the slave to indicate that it is ready to receive the data
+The DMA read channel (**read data from RAM** and write it to device) uses the first 3 signals to send the signal to the DAC, while the write channel (read data from device and **write it to RAM**) also requires the *TLAST* signal to receive signals from the ADC.
 
-It is possible to dispense with the TREADY signal and in this case, transmission is considered to take place without confirmation from the slave. The following signal is also commonly used: 
+The number of frames required is variable: especially if you want a continuous signal!
 
-- *TLAST* : indicates the end of a frame, useful when the frames are of variable size
+# RF converters
 
-A frame is defined as all the data sent from the master to the slave, in one iteration. It is therefore possible to send several frames in the same transfer. It is then necessary to adjust the *TLAST* signal.
+There are various RF (Radio-Frequency) converters to be used on the ZCU111.
+A [DAC](https://en.wikipedia.org/wiki/Digital-to-analog_converter) (Digital to Analog Converter) is a device that converts a digital signal into an analog signal, while an [ADC](https://en.wikipedia.org/wiki/Analog-to-digital_converter) (Analog to Digital Converter) is a device that converts an analog signal into a digital signal.
 
-The Read Channel of the DMA (**read data from RAM** and write it to the device) uses the first 3 signals to send the signal to the DAC, while the Write Channel (read data from the device and **write it to the RAM**) imposes in addition the *TLAST* signal to receive the signals from the ADC. 
+Since the target is a "continuous flow" of analog data, it makes sense to use the AXI4-Stream protocol to send data to the DACs and receive data from the ADCs.
 
-The number of frames desired is variable: in particular if you want to have a continuous signal !
+The IP [Zynq UltraScale+ RFSoC RF Data Converter](https://www.xilinx.com/products/intellectual-property/rf-data-converter.html) supplied by Xilinx is used to configure the DACs and ADCs and interface them to the DMA using the AXI4-Stream protocol.
 
-# RF Data Converter
+# Technical specifications of RF converters
 
-A [Digital to Analog Converter](https://en.wikipedia.org/wiki/Digital-to-analog_converter) (DAC) is a system that converts a digital signal into an analog signal and an [Analog to Digital Converter](https://en.wikipedia.org/wiki/Analog-to-digital_converter) (ADC) is a system that converts an analog signal into a digital signal.
+These are the main technical specifications of the IP [Zynq UltraScale+ RFSoC RF Data Converter](https://www.xilinx.com/products/intellectual-property/rf-data-converter.html) supplied by Xilinx.
 
-In this example, I will use the [Zynq UltraScale+ RFSoC RF Data Converter](https://www.xilinx.com/products/intellectual-property/rf-data-converter.html) Xilinx IP to **transfer data from the DMA to the DAC (or from the ADC to the DMA)** using an **AXI4-Stream interface**.
+![RF_summary](./../images/RF_summary.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - Summary")
 
-# Technical Characteristics of RF Data Converter
+DACs and ADCs are organized in tiles and pairs in the ZCU111 SoC ([PG269](https://docs.xilinx.com/r/en-US/pg269-rf-data-converter)).
+Each tile shares the sampling frequency and the use (or not) of a PLL to generate a clock, as well as its frequency.
 
-![RF_summary](./images/RF_summary.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - Summary")
+The ''XM500 RFMC balun transformer add-on card'' features various SMA connectors for easy operation of the various converters.
+Half the connectors use baluns, while the others are simple differential pairs.
+In particular, some connectors are identified as ''LF'' (Low Frequency) because they have a 0 - 1GHz analog band, and others as ''HF'' (High Frequency) because they have a 1 - 4GHz analog band.
 
-According to [PG269](https://docs.xilinx.com/r/en-US/pg269-rf-data-converter) ZCU111, DACs and ADCs are organized in tiles and pairs. Each tile shares the sampling frequency and the use (or not) of a PLL to generate a clock, and its frequency.
+Keep in mind the Nyquist-Shannon sampling theorem when using these connectors: the sampling frequency must be at least twice the desired analog frequency.
+With a sampling frequency of 2 GSa/s, we have a maximum analog bandwidth of 1 GHz, so we need to use LF connectors, while with a sampling frequency of 4 GSa/s, we have a maximum analog bandwidth of 2 GHz, so we need to use HF connectors.
+In our case, we use the differential pairs directly, in order to preserve the original signal.
 
-Note that XM500 RFMC balun transformer add-on card provides different SMA connectors to operate DACs and ADCs.
-Half of the ports use baluns and RF filters, while the others are differential pairs. 
-In particular, some ports are identified as LF, because they have a 0-1GHz low-cut filter, and others as HF, because they have a 1-4GHz bandpass filter.
 
-We must be careful with the sampling frequency/filter pairs in order to respect the Nyquist-Shannon sampling theorem.
-If the sampling frequency is 1 GSa/s, the analog signal cannot exceed the frequency of 512 MHz, for 2 GSa/s it is 1GHz, for 4 GSa/s it is 2 GHz and for 6 GSa it is 3GHz (in any case, the maximum bandwidth frequency on the ZCU111 SoC is 4 GHz).
+
+
+
+
+
+
+
+
 
 
 
