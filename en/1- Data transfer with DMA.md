@@ -78,7 +78,7 @@ With a more conventional **300 MHz** clock, a transfer rate of **4.6875 GB/s** i
 
 > More precisely : 128 bits * 300 MHz = 38 400 * 10<sup>6</sup> bps = 37.5 Gbps = 4.6875 GB/s
 
-Moreover, HP1 and HP2 share the same 128 bits AXI4 Memory Map interface ([UG1085](https://www.xilinx.com/support/documentation/user_guides/ug1085-zynq-ultrascale-trm.pdf)), so the throughput will not be maximal if they are both used at the same time.
+Moreover, HP1 and HP2 share the same 128 bits AXI4 Memory Map interface ([UG1085](https://docs.xilinx.com/r/en-US/ug1085-zynq-ultrascale-trm/Zynq-UltraScale-Device-Technical-Reference-Manual)), so the throughput will not be maximal if they are both used at the same time.
 
 #### Using Samples per seconds
 
