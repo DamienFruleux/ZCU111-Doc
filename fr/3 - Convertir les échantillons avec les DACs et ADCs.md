@@ -47,4 +47,61 @@ Il faut garder en tête le théorème d'échantillonnage de Nyquist-Shannon lors
 Avec une fréquence d'échantillonage de 2 GSa/s, on a une bande analogique maximale de 1 GHz et donc il faut utiliser les connecteurs LF, tandis qu'avec une fréquence d'échantillonage de 4 GSa/s, on a une bande analogique maximale de 2 GHz et donc il faut utiliser les connecteurs HF.
 Dans notre cas, nous utilisons directement les paires différentielles, afin de conserver le signal original.
 
+## Organisation des DACs
+
+Sur la ZCU111, les 8 DACs sont disposés en 2 tuiles (228-229) de 4 DACs chacune, organisées par paires (0,1 et 2,3).
+
+![RF_DAC](./../images/RF_DAC.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-DAC")
+
+On a la disposition des DACs sur la carte fille XM500.
+
+| Tuile | DAC | Interface | Fréquence | Nom | Connecteur |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 228 | 0 | Direct | 0 - 4GHz | DAC228_T0_CH0 | J26 / J27 |
+| 228 | 1 | Direct | 0 - 4GHz | DAC228_T0_CH1 | J20 / J21 |
+| 228 | 2 | Direct | 0 - 4GHz | DAC228_T0_CH2 | J22 / J23 |
+| 228 | 3 | Direct | 0 - 4GHz | DAC228_T0_CH3 | J24 / J25 |
+| 229 | 0 | Balun HF | 1 - 4 GHz | DAC229_T1_CH0 | J7 |
+| 229 | 1 | Balun HF | 1 - 4 GHz | DAC229_T1_CH1 | J8 |
+| 229 | 2 | Balun LF | 0 - 1 GHz | DAC229_T1_CH2 | J5 |
+| 229 | 3 | Balun LF | 0 - 1 GHz | DAC229_T1_CH3 | J6 |
+
 ## Organisation des ADCs
+
+Sur la ZCU111, les 8 ADCs sont disposés en 4 tuiles (224-225-226-227) de 2 ADCs chacune, organisées en paires (0-1).
+
+![RF_ADC](./../images/RF_ADC.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-ADC")
+
+On a la disposition des ADCs sur la carte fille XM500.
+
+| Tuile | ADC | Interface | Fréquence | Nom | Connecteur |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 227 | 0 | Direct | 0 - 4GHz | ADC226_T2_CH0 | J32 / J33 |
+| 227 | 1 | Direct | 0 - 4GHz | ADC226_T2_CH1 | J34 / J35 |
+| 226 | 0 | Direct | 0 - 4GHz | ADC227_T3_CH0 | J36 / J37 |
+| 226 | 1 | Direct | 0 - 4GHz | ADC227_T3_CH1 | J39 / J40 |
+| 225 | 0 | Balun HF | 1 - 4 GHz | ADC225_T1_CH0 | J2 |
+| 225 | 1 | Balun HF | 1 - 4 GHz | ADC225_T1_CH1 | J1 |
+| 224 | 0 | Balun LF | 0 - 1 GHz | ADC224_T0_CH0 | J4 |
+| 224 | 1 | Balun LF | 0 - 1 GHz | ADC224_T0_CH1 | J3 |
+
+## Paramétrage des horloges
+
+Les convertisseurs d'une même tuile partagent différents éléments.
+En particulier, on peut paramétrer :
+
+- la fréquence d'échantillonnage
+- l'horloge de l'inteface AXI4-Stream
+- la PLL qui permet de générer une horloge à une fréquence désirée si nécessaire
+- l'horloge de sortie si la PLL est activée
+
+La fréquence d'échantillonnage choisie détermine la fréquence de l'horloge de l'interface AXI4-Stream nécessaire.
+
+Cette horloge peut être générée directement avec l'IP \textit{Zynq UltraScale+ RFSoC RF Data Converter} fournit par Xilinx, en exploitant les PLLs disponnibles.
+La valeur par défaut des PLLs (409.600 MHz) est adaptée à cet exemple.
+Il est cependant possible de la modifier, notamment si l'on souhaite utiliser une fréquence d'échantillonnage qui ne soit pas en base binaire (1.024 GSa/s), mais en base décimale (1 GSa/s).
+
+Les convertisseurs d'une même tuile partagent les mêmes horloges, on peut donc être sûr qu'ils seront parfaitement synchronisés entre eux.
+Il faut donc associer correctement les convertisseurs en privilégiant ceux qui sont dans la même tuile.
+
+Il faut aussi s'assurer que les signaux numériques des deux canaux sont disponibles en même temps pour être convertis ensemble.
