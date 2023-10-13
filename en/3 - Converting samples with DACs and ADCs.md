@@ -1,7 +1,7 @@
 # AXI4-Stream protocol
 
 The [AXI4-Stream] protocol (https://wiki.electroniciens.cnrs.fr/index.php/FPGA_CPLD_:_Guides_:_AXI4-Stream) is a "handshake" protocol that uses between 2 and 9 signals to communicate, although 3 to 4 signals are generally sufficient and necessary.
-It is a master-slave protocol: the master sends data and the slave receives it.
+It is a "master-slave" protocol: the master sends data and the slave receives it.
 
 ![AXI4-Stream](./../images/AXI4-Stream.png?raw=true "AXI4-Stream Schema")
 
@@ -39,119 +39,72 @@ These are the main technical specifications of the IP [Zynq UltraScale+ RFSoC RF
 DACs and ADCs are organized in tiles and pairs in the ZCU111 SoC ([PG269](https://docs.xilinx.com/r/en-US/pg269-rf-data-converter)).
 Each tile shares the sampling frequency and the use (or not) of a PLL to generate a clock, as well as its frequency.
 
-The ''XM500 RFMC balun transformer add-on card'' features various SMA connectors for easy operation of the various converters.
+The _XM500 RFMC balun transformer add-on card_ provides various SMA connectors for easy operation of the various converters.
 Half the connectors use baluns, while the others are simple differential pairs.
-In particular, some connectors are identified as ''LF'' (Low Frequency) because they have a 0 - 1GHz analog band, and others as ''HF'' (High Frequency) because they have a 1 - 4GHz analog band.
+In particular, some connectors are identified as "LF" (Low Frequency) because they have a 0 - 1GHz analog band, and others as "HF" (High Frequency) because they have a 1 - 4GHz analog band.
 
 Keep in mind the Nyquist-Shannon sampling theorem when using these connectors: the sampling frequency must be at least twice the desired analog frequency.
 With a sampling frequency of 2 GSa/s, we have a maximum analog bandwidth of 1 GHz, so we need to use LF connectors, while with a sampling frequency of 4 GSa/s, we have a maximum analog bandwidth of 2 GHz, so we need to use HF connectors.
 In our case, we use the differential pairs directly, in order to preserve the original signal.
 
+## DACs organization
 
+On ZCU111, the 8 DACs are arranged in 2 tiles (228-229) of 4 DACs each, organized in pairs (0,1 and 2,3).
 
+![RF_DAC](./../images/RF_DAC.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-DAC")
 
+We have the arrangement of the DACs on the XM500 daughterboard.
 
+| Tile | ADC | Interface | Frequency | Name | Connector |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 228 | 0 | Direct | 0 - 4GHz | DAC228_T0_CH0 | J26 / J27 |
+| 228 | 1 | Direct | 0 - 4GHz | DAC228_T0_CH1 | J20 / J21 |
+| 228 | 2 | Direct | 0 - 4GHz | DAC228_T0_CH2 | J22 / J23 |
+| 228 | 3 | Direct | 0 - 4GHz | DAC228_T0_CH3 | J24 / J25 |
+| 229 | 0 | Balun HF | 1 - 4 GHz | DAC229_T1_CH0 | J7 |
+| 229 | 1 | Balun HF | 1 - 4 GHz | DAC229_T1_CH1 | J8 |
+| 229 | 2 | Balun LF | 0 - 1 GHz | DAC229_T1_CH2 | J5 |
+| 229 | 3 | Balun LF | 0 - 1 GHz | DAC229_T1_CH3 | J6 |
 
+## ADCs organization
 
+On ZCU111, the 8 ADCs are arranged in 4 tiles (224-225-226-227) of 2 ADCs each, organized in pair (0-1).
 
+![RF_ADC](./../images/RF_ADC.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-ADC")
 
+We have the arrangement of the ADCs on the XM500 daughterboard.
 
+| Tile | ADC | Interface | Frequency | Name | Connector |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 227 | 0 | Direct | 0 - 4GHz | ADC226_T2_CH0 | J32 / J33 |
+| 227 | 1 | Direct | 0 - 4GHz | ADC226_T2_CH1 | J34 / J35 |
+| 226 | 0 | Direct | 0 - 4GHz | ADC227_T3_CH0 | J36 / J37 |
+| 226 | 1 | Direct | 0 - 4GHz | ADC227_T3_CH1 | J39 / J40 |
+| 225 | 0 | Balun HF | 1 - 4 GHz | ADC225_T1_CH0 | J2 |
+| 225 | 1 | Balun HF | 1 - 4 GHz | ADC225_T1_CH1 | J1 |
+| 224 | 0 | Balun LF | 0 - 1 GHz | ADC224_T0_CH0 | J4 |
+| 224 | 1 | Balun LF | 0 - 1 GHz | ADC224_T0_CH1 | J3 |
 
+## Clock settings
 
-
-
-
-
-
-
-## A- DACs organization
-
-![RF_DAC_1](./images/RF_DAC_1.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-DAC")
-![RF_DAC_2](./images/RF_DAC_2.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-DAC")
-
-On ZCU111, the 8 DACs are arranged in 2 tiles (*228-229*) of 4 DACs each, organized in pairs (*0,1* and *2,3*).
-
-On the XM500 board, **the pair 2,3 of tile 229 goes through a 0-1GHz bandpass filter** (called LF_TX), **the pair 0,1 of tile 229 goes through a 1-4GHz bandpass filter** (called HF_TX) and **the pairs 2,3 and 0,1 of tile 228 are not filtered** (the differential pair is available, without baluns).
-
-In conclusion, we have : 
-
-- DAC Tile 228 - DAC Pair 0,1 - not filtered (differential pair) - SMA J26/J27 and J20/J21
-- DAC Tile  228 - DAC Pair 2,3 - not filtered (differential pair) - SMA J22/J23 and J24/J25
-- DAC Tile  229 - DAC Pair 0,1 - 1-4 GHz (HF_TX) - SMA J7 and J8
-- DAC Tile  229 - DAC Pair 2,3 - 0-1 GHz (LF_TX) - SMA J6 and J5
-
-## B- ADCs organization
-
-![RF_ADC_1](./images/RF_ADC_1.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-ADC")
-![RF_ADC_2](./images/RF_ADC_2.png?raw=true "Zynq UltraScale+ RFSoC RF Data Converter Xilinx IP - RF-ADC")
-
-On ZCU111, the 8 ADCs are arranged in 4 tiles (*224-225-226-227*) of 2 ADCs each, organized in pair (*0-1*).
-
-On the XM500 board, the pair **0-1 of tile 224 goes through a 0-1GHz bandpass filter** (called LF_RX), **the pair 0-1 of tile 225 goes through a 1-4GHz bandpass filter** (called HF_RX) and the **pairs 0-1 of tiles 226 and 227 are not filtered** (the differential pair is available, without baluns)
-
-In conclusion, we have : 
-
-- DAC Tile 227 - DAC Pair 0,1 - not filtered (differential pair) - SMA J32/J33 and J34/J35
-- DAC Tile 226 - DAC Pair 0,1 - not filtered (differential pair) - SMA J36/J37 and J39/J40
-- DAC Tile  225 - DAC Pair 0,1 - 1-4 GHz (HF_RX) - SMA J2 and J1
-- DAC Tile  224 - DAC Pair 0,1 - 0-1 GHz (LF_RX) - SMA J4 and J3
-
-## C- Sampling Rate, AXI4-Stream Clock & PLL
-
-The converters in the same tile share different elements : 
+Converters on the same tile share various elements.
+In particular, you can set :
 
 - The sampling frequency
 - The AXI4-Stream clock
-- The PLL (optional) which allows to generate a clock at a desired frequency if needed
+- The PLL, which allows to generates a clock at a desired frequency if required
+- Output clock if PLL is enabled
 
-The selected sampling rate determines the frequency of the AXI4-Stream clock.
+The selected sampling frequency determines the AXI4-Stream clock frequency required.
 
-It is possible to generate a clock from this IP that can be used as an input (loop). It will be necessary to multiply the frequency of this clock by 2 when using ADCs (nothing to do for DACs).
+This clock can be generated directly with the IP [Zynq UltraScale+ RFSoC RF Data Converter](https://www.xilinx.com/products/intellectual-property/rf-data-converter.html) supplied by Xilinx, using the available PLLs.
+The default PLL value (409.600 MHz) is suitable for this example.
+However, it is possible to modify it, particularly if you wish to use a sampling frequency that is not in binary base (1.024 GSa/s), but in decimal base (1 GSa/s).
 
-We will keep the default value of the PLL (409.600 MHz) which is adapted to our case. However, it is possible to change it, in particular if we wish to use a sampling frequency that is not a multiple of 2, but a multiple of 10 (1.024 GSa/s vs 1 GSa/s). 
+Converters on the same tile share the same clocks, so you can be sure that they will be perfectly synchronized with each other.
+So you need to associate converters correctly, giving preference to those on the same tile. 
 
-The converters in the same tile share the same clocks, so we can be sure that they will be perfectly synchronised with each other. Therefore, the converters must be correctly associated, giving preference to those in the same tile, as explained above.
-
-However, it must be ensured that the digital signals from both channels are available at the same time to be converted together.
-
-
-
-
-
-
-
-
-
-
-
-
-# 3- Signal Processing
-
-It is important to know that the RF Data Converter IP do not perfectly respect the AXI4-Stream protocol. In fact, we have continuous data flows, which use the AXI4-Stream protocol only as a basis. That is to say that the 2 converters send and receive data all the time on the *TDATA* signal, whatever the value of *TVALID* (and *TREADY*). It is therefore necessary to **condition these flows** so that they respect the AXI4-Steam protocol and interact properly with .
-
-## A- Using DAC
-
-As the DAC does not take into account the *TVALID* signal, it permanently samples the data coming from *TDATA*. These being by definition not reset to 0 at the end of the transfer, the DAC continues to sample the last frame it reads in the previous IP (AXI4 FIFO) ! %TODO
-
-**It is then necessary to create an IP which imposes to put at zero the *TDATA* signal for the DAC when the *TVALID* signal coming from the DMA is 0 : I called this IP "FIFO_sync".**
-
-![PS-to-DAC](./images/PS-to-DAC.png?raw=true "PS-to-DAC Schema")
-
-## B- Using ADC
-
-Since the ADC continuously generates data on the *TDATA* signal, it never changes the *TVALID* signal, which is the *TVALID* signal, which remains at 1 permanently.
-
-**It is then necessary to create an IP which will generate data frames only when the DMA is ready (TREADY signal) : I called this IP "FIFO_ADC_sync".**
-
-Moreover, as I wrote above, if a *TDATA* signal arrives on the DMA before it is initialized, it tends to block it. In addition, the DMA requires a *TLAST* signal which must also be generated according to the number of frames that we wish to acquire.
-
-todo : need to complet, still in progress
-
-![ADC-to-PS_1](./images/ADC-to-PS_1.png?raw=true "ADC-to-PS Schema")
-![ADC-to-PS_2](./images/ADC-to-PS_2.png?raw=true "ADC-to-PS Schema")
-
-
-
+You must also ensure that the digital signals from both channels are available at the same time to be converted together.
 
 
 
@@ -216,9 +169,56 @@ I add below the details of the calculations, as well as the frequency of the nec
 
 
 
+
+
+
+
+
+
+
+
+# 3- Signal Processing
+
+It is important to know that the RF Data Converter IP do not perfectly respect the AXI4-Stream protocol. In fact, we have continuous data flows, which use the AXI4-Stream protocol only as a basis. That is to say that the 2 converters send and receive data all the time on the *TDATA* signal, whatever the value of *TVALID* (and *TREADY*). It is therefore necessary to **condition these flows** so that they respect the AXI4-Steam protocol and interact properly with .
+
+## A- Using DAC
+
+As the DAC does not take into account the *TVALID* signal, it permanently samples the data coming from *TDATA*. These being by definition not reset to 0 at the end of the transfer, the DAC continues to sample the last frame it reads in the previous IP (AXI4 FIFO) ! %TODO
+
+**It is then necessary to create an IP which imposes to put at zero the *TDATA* signal for the DAC when the *TVALID* signal coming from the DMA is 0 : I called this IP "FIFO_sync".**
+
+![PS-to-DAC](./images/PS-to-DAC.png?raw=true "PS-to-DAC Schema")
+
+## B- Using ADC
+
+Since the ADC continuously generates data on the *TDATA* signal, it never changes the *TVALID* signal, which is the *TVALID* signal, which remains at 1 permanently.
+
+**It is then necessary to create an IP which will generate data frames only when the DMA is ready (TREADY signal) : I called this IP "FIFO_ADC_sync".**
+
+Moreover, as I wrote above, if a *TDATA* signal arrives on the DMA before it is initialized, it tends to block it. In addition, the DMA requires a *TLAST* signal which must also be generated according to the number of frames that we wish to acquire.
+
+todo : need to complet, still in progress
+
+![ADC-to-PS_1](./images/ADC-to-PS_1.png?raw=true "ADC-to-PS Schema")
+![ADC-to-PS_2](./images/ADC-to-PS_2.png?raw=true "ADC-to-PS Schema")
+
+
+
+
+
+
+
+
+
+
+
+
 # 6- Clocks settings 
 
 todo : PLL / LMK04208 & LMX2594 / DAC_CLKIN & ADC_CLKIN
+
+
+
 
 
 
