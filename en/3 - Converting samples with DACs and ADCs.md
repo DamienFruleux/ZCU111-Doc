@@ -1,6 +1,6 @@
 # AXI4-Stream protocol
 
-The [AXI4-Stream] protocol (https://wiki.electroniciens.cnrs.fr/index.php/FPGA_CPLD_:_Guides_:_AXI4-Stream) is a "handshake" protocol that uses between 2 and 9 signals to communicate, although 3 to 4 signals are generally sufficient and necessary.
+The [AXI4-Stream](https://wiki.electroniciens.cnrs.fr/index.php/FPGA_CPLD_:_Guides_:_AXI4-Stream) protocol is a "handshake" protocol that uses between 2 and 9 signals to communicate, although 3 to 4 signals are generally sufficient and necessary.
 It is a "master-slave" protocol: the master sends data and the slave receives it.
 
 ![AXI4-Stream](./../images/AXI4-Stream.png?raw=true "AXI4-Stream Schema")
