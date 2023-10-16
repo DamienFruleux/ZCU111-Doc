@@ -113,7 +113,7 @@ It is the number of bits that will be sent or received by the DMA in 1 clock str
 On the other side of the interface, throughput is defined by the IP used: generally, it is not possible to choose this parameter directly, as it depends on the operation of this IP.
 In our case, DACs work with a data width of 256 bits (16 samples of 16 bits), while ADCs work with a data width of 128 bits (8 samples of 16 bits).
 
-## C- Maximum amount of memory
+## C- Maximum usable memory
 
 The ZCU111 has 2 different RAMs: PS RAM and PL RAM.
 
