@@ -69,34 +69,34 @@ Le débit d'un transfert dépend des différents paramètres de l'interface cons
 
 ### Côté AXI4 Memory Map, utilisation de la PS RAM
 
-Du côté AXI4 Memory Map, le débit est limitée par la PS : la largeur des bus de données AXI4 HP0/1/2/3 est limitée à **128 bits**.
-Sachant que la fréquence d'horloge maximale de la PS est de **333 MHz**, le taux de transfert maximal du côté AXI4 Memory Map est de **5,20 Go/s**.
+Le débit est limitée par la PS en elle-même : la largeur des 4 interfaces HP0/HP1/HP2/HP3 disponibles (_S_AXI_HP0_FPD / S_AXI_HP1_FPD / S_AXI_HP2_FPD / S_AXI_HP3_FPD_) est de 128 bits au maximum.
+
+Sachant que la fréquence d'horloge maximale de la PS est de 333 MHz, le taux de transfert maximal est de **5,20 Go/s**.
 
 > Plus précisément : 128 bits * 333 MHz = 42 624 * 10<sup>6</sup> bps = 41.625 Gbps = 5.20 Go/s
 
-Avec une horloge plus classique de **300 MHz**, on atteint un taux de transfert de **4.6875 Go/s**.
+Avec une horloge plus classique de 300 MHz, on atteint un taux de transfert de **4.6875 Go/s**.
 
 > Plus précisément : 128 bits * 300 MHz = 38 400 * 10<sup>6</sup> bps = 37.5 Gbps = 4.6875 Go/s
 
-De plus, HP1 et HP2 partagent la même interface AXI4 Memory Map 128 bits ([UG1085](https://docs.xilinx.com/r/en-US/ug1085-zynq-ultrascale-trm/Zynq-UltraScale-Device-Technical-Reference-Manual)) de sorte que le débit ne sera pas maximale s'ils sont utilisés en même temps.
+On peut donc théoriquement atteindre au total un débit 4 fois supérieur en utilisant les 4 interfaces HPx en parallèle.
+Cependant HP1 et HP2 partagent la même interface 128 bits ([UG1085](https://docs.xilinx.com/r/en-US/ug1085-zynq-ultrascale-trm/Zynq-UltraScale-Device-Technical-Reference-Manual)) et par conséquent le débit ne sera pas maximal si ils sont utilisés en même temps.
+On a donc au total un débit 3 fois supérieur en utilisant les interfaces HP0/HP1/HP3 ou HP0/HP2/HP3.
+Cependant, comme nous le verront par la suite, ce n'est pas si évident d'utiliser ces interfaces en même temps pour exploiter plusieurs convertisseurs en parallèle.
 
 #### En utilisant des "Samples per seconds"
 
-Par la suite, nous utiliserons une DMA pour envoyer ou recevoir des données avec des DACs et des ADCs.
-Généralement, on parle en GSa/s (Samples per seconds, ou GSPS dans la nomenclature Xilinx) plutôt qu'en Go/s.
-
-Comme nous le verrons, les DACs et ADCs utilisent des données codées sur 16 bits, donc **1 échantillon = 16 bits = 2 octets**.
-
-Le taux de transfert maximal de ce côté est donc également de **2,6 GSa/s** avec une horloge de 333 MHz ou **2,34375 GSa/s** avec une horloge plus classique de 300 MHz.
+Comme nous utilisons une DMA pour envoyer ou recevoir des données avec des DACs et des ADCs, on parle plus généralement en GSa/s (Samples per seconds, ou GSPS dans la nomenclature Xilinx) plutôt qu'en Go/s.
+Les DACs et ADCs de la ZCU111 utilisent des données codées sur 16 bits, donc **1 échantillon = 16 bits = 2 octets**.
+Le taux de transfert maximal est donc également de **2,6 GSa/s** avec une horloge de 333 MHz ou **2,34375 GSa/s** avec une horloge plus classique de 300 MHz.
 
 Il est préférable d'utiliser une horloge de 300 MHz, car en plus d'être plus classique, c'est à cette fréquence que fonctionne la PL RAM : cela permet de réutiliser facilement le même design entre la PS RAM et la PL RAM et donc augmenter la compatibilité.
 Dans le cas ou l'on souhaite les performances maximales, il reste 33MHz de marge.
 
 ### Côté AXI4 Memory Map, utilisation de la PL RAM
 
-Comme nous l'avons vu plus haut, il est également possible d'utiliser les 4 Go de DDR4 SDRAM (PL RAM).
-Dans ce cas, la largeur du bus de données est de **512 bits**.
-De plus, la mémoire DDR4 SDRAM nécessite une fréquence d'horloge de **300 MHz**.
+Cette fois, la largeur du bus de données est de 512 bits et la fréquence d'horloge est de 300 MHz.
+
 Dans ce cas, le taux de transfert maximal du côté AXI4 Memory Map est de **18,75 Go/s**.
 							
 > Plus précisément : 512 bits * 300 MHz = 153 600 * 10<sup>6</sup> bps = 150 Gbps = 18.75 Go/s
@@ -113,7 +113,7 @@ Il s'agit du nombre de bits qui seront envoyés ou reçus par la DMA en 1 coup d
 De l'autre côté de l'interface, le débit est définie par l'IP utilisée : généralement, il n'est pas possible de choisir directement ce paramètre puisqu'il dépends du fonctionnement de cette IP.
 Dans notre cas, les DACs fonctionnent avec une largeur de données de 256 bits (16 échantillons de 16 bits), tandis que les ADCs fonctionnent avec une largeur de données de 128 bits (8 échantillons de 16 bits).
 
-## Quantité maximale de mémoire
+## Quantité maximale de mémoire utilisable
 
 La ZCU111 dispose de 2 RAMs différentes : la PS RAM et la PL RAM.
 
@@ -121,9 +121,10 @@ Il est possible de changer la barrette de RAM SODIMM ([DS889](https://docs.xilin
 En théorie cela correspond à respectivement 2 GSa et 16 GSa, mais il faut garder en tête que le noyau GNU/Linux utilise aussi cette mémoire !
 La quantitée de mémoire réellement utilisable n'est ainsi pas parfaitement définie.
 Enfin, on ne peut pas gérer cette mémoire comme on le souhaite : il faut faire des allocations de mémoire.
-
+Dans un cas de production, il pourrait être interessant de réaliser un PCB qui intègre le même SoPC que cette carte de développement mais avec des puces mémoire de plus grosse capacitée, afin de ne plus avoir ces limites.
 Malheureusement, il n'est pas possible d'augmenter la DDR4 SDRAM, car ces puces mémoire sont soudées.
 On dispose de **4 Go de mémoire dans la PL**.
+
 De plus, celle-ci n'est pas du tout utilisée par le noyau, on à ainsi 2 GSa disponnible que l'on peut utiliser et gérer à notre convenance.
 
 On a donc un compromis à faire entre le débit et la quantité de mémoire : **~ 32 Go @ 5.20 Go/s ou 4 Go @ 18.75 Go/s !**
